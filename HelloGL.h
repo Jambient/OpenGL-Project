@@ -13,5 +13,5 @@ public:
 
 	void Display();
 	void DrawPolygon();
-	void DrawCircleOutline(float radius, float sides = 64.0f);
+	void DrawCircle(float radius, bool filled = true, float sides = 64.0f);
 };
