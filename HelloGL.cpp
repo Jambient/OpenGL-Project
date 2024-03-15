@@ -25,16 +25,17 @@ void HelloGL::Display()
 	glClear(GL_COLOR_BUFFER_BIT);
 	//DrawPolygon();
 	//DrawRegularPolygon(0.5f, true, 3);
-	DrawTriangleFromAngles(DegreesToRadians(30), DegreesToRadians(20), 0.3f, std::make_pair(-0.7f, 0.5f));
-	DrawTriangleFromAngles(DegreesToRadians(70), DegreesToRadians(70), 0.3f, std::make_pair(-0.15f, 0.5f));
-	DrawTriangleFromAngles(DegreesToRadians(60), DegreesToRadians(60), 0.3f, std::make_pair(0.4f, 0.5f));
-	DrawTriangleFromAngles(DegreesToRadians(70), DegreesToRadians(45), 0.3f, std::make_pair(-0.7f, -0.1f));
-	DrawTriangleFromAngles(DegreesToRadians(90), DegreesToRadians(45), 0.3f, std::make_pair(-0.15f, -0.1f));
-	DrawTriangleFromAngles(DegreesToRadians(110), DegreesToRadians(30), 0.3f, std::make_pair(0.4f, -0.1f));
+	DrawTriangleFromAngles(30, 20, 0.3f, std::make_pair(-0.7f, 0.5f));
+	DrawTriangleFromAngles(70, 70, 0.3f, std::make_pair(-0.15f, 0.5f));
+	DrawTriangleFromAngles(60, 60, 0.3f, std::make_pair(0.4f, 0.5f));
+	DrawTriangleFromAngles(70, 45, 0.3f, std::make_pair(-0.7f, -0.1f));
+	DrawTriangleFromAngles(90, 45, 0.3f, std::make_pair(-0.15f, -0.1f));
+	DrawTriangleFromAngles(110, 30, 0.3f, std::make_pair(0.4f, -0.1f));
 
 	DrawRegularPolygon(std::make_pair(-0.5f, -0.5f), 0.2f, true, 5);
 	DrawRegularPolygon(std::make_pair(0, -0.5f), 0.2f, true, 6);
 	DrawRegularPolygon(std::make_pair(0.5f, -0.5f), 0.2f, true, 7);
+
 	glFlush();
 }
 
@@ -57,7 +58,7 @@ void HelloGL::DrawPolygon()
 	glEnd();
 	glPopMatrix();
 }
-void HelloGL::DrawRegularPolygon(mk_pair center, float radius, bool filled, float sides)
+void HelloGL::DrawRegularPolygon(vector2 center, float radius, bool filled, float sides)
 {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -75,15 +76,18 @@ void HelloGL::DrawRegularPolygon(mk_pair center, float radius, bool filled, floa
 	glEnd();
 	glPopMatrix();
 }
-mk_pair intersection(mk_pair A, mk_pair B, mk_pair C, mk_pair D) {
+
+vector2 intersection(vector2 A, vector2 B, vector2 C, vector2 D) {
 	// Line AB represented as a1x + b1y = c1
 	double a = B.second - A.second;
 	double b = A.first - B.first;
 	double c = a * (A.first) + b * (A.second);
+
 	// Line CD represented as a2x + b2y = c2
 	double a1 = D.second - C.second;
 	double b1 = C.first - D.first;
 	double c1 = a1 * (C.first) + b1 * (C.second);
+
 	double det = a * b1 - a1 * b;
 	if (det == 0) {
 		return std::make_pair(FLT_MAX, FLT_MAX);
@@ -95,18 +99,19 @@ mk_pair intersection(mk_pair A, mk_pair B, mk_pair C, mk_pair D) {
 	}
 }
 
-void HelloGL::DrawTriangleFromAngles(float angle1, float angle2, float base, mk_pair pos)
+void HelloGL::DrawTriangleFromAngles(float angle1, float angle2, float base, vector2 pos)
 {
-	/*mk_pair a = std::make_pair(0, 0);
-	mk_pair b = std::make_pair(cos(angle1), sin(angle1));
-	mk_pair c = std::make_pair(base, 0);
-	mk_pair d = std::make_pair(base + cos(6.2831852 - angle2), sin(6.2831852 - angle2));
-
-	mk_pair inter = intersection(a, b, c, d);
-	if (inter.first == FLT_MAX && inter.second == FLT_MAX) {
-		std::cout << "The given lines AB and CD are parallel.\n";
+	if (angle1 + angle2 >= 180) {
+		std::cout << "Triangle with angles " << angle1 << " and " << angle2 << " is not possible.";
 		return;
 	}
+
+	/*vector2 a = std::make_pair(0, 0);
+	vector2 b = std::make_pair(cos(angle1), sin(angle1));
+	vector2 c = std::make_pair(base, 0);
+	vector2 d = std::make_pair(base + cos(6.2831852 - angle2), sin(6.2831852 - angle2));
+
+	vector2 inter = intersection(a, b, c, d);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -122,7 +127,27 @@ void HelloGL::DrawTriangleFromAngles(float angle1, float angle2, float base, mk_
 	glEnd();
 	glPopMatrix();*/
 
-	
+	float angle3 = 180 - angle1 - angle2;
+
+	float side1 = (base * sin(DegreesToRadians(angle3))) / sin(DegreesToRadians(angle2));
+	/*float side2 = (base * sin(DegreesToRadians(angle1))) / sin(DegreesToRadians(angle3));
+	std::cout << side1 << " : " << side2 << std::endl;*/
+
+	vector2 side1_direction = std::make_pair(cos(DegreesToRadians(angle1)), sin(DegreesToRadians(angle1)));
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glPushMatrix();
+	glTranslatef(pos.first, pos.second, 0.0f);
+	glBegin(GL_POLYGON);
+	{
+		glVertex2f(0.0f, 0.0f);
+		glVertex2f(side1_direction.first * side1, side1_direction.second * side1);
+		glVertex2f(base, 0.0f);
+	}
+	glEnd();
+	glPopMatrix();
 }
 
 
