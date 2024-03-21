@@ -2,7 +2,7 @@
 #include <cmath>
 #include <iostream>
 
-float DegreesToRadians(float degrees) { return degrees * (3.1415926 / 180); }
+float DegreesToRadians(float degrees) { return degrees * (3.1415926 / 180.0f); }
 
 HelloGL::HelloGL(int argc, char* argv[]) 
 {
@@ -27,9 +27,9 @@ HelloGL::~HelloGL(void)
 }
 
 void HelloGL::Display()
-{ 
-
+{
 	glClear(GL_COLOR_BUFFER_BIT);
+
 	DrawTriangleFromAngles(30, 20, 0.3f, std::make_pair(-0.7f, 0.5f), row1Rotation);
 	DrawTriangleFromAngles(70, 70, 0.3f, std::make_pair(-0.15f, 0.5f), row1Rotation);
 	DrawTriangleFromAngles(60, 60, 0.3f, std::make_pair(0.4f, 0.5f), row1Rotation);
@@ -50,18 +50,18 @@ void HelloGL::Update()
 	//row1Rotation = fmod(row1Rotation + 0.5f, 360.0f);
 	row2Rotation = fmod(row2Rotation + 1.5f, 360.0f);
 	row3Rotation = fmod(row3Rotation - 0.5f, 360.0f);
-	scale = abs(sin(glutGet(GLUT_ELAPSED_TIME) / 500.0f)) / 2.0f + 0.2f;
+	scale = abs(sin(glutGet(GLUT_ELAPSED_TIME) / 500.0f)) / 1.5f + 0.2f;
 
 	glutPostRedisplay();
 }
 
 void HelloGL::DrawPolygon()
 {
-	glMatrixMode(GL_MODELVIEW); // Make sure the modelview matrix is active
-	glLoadIdentity(); // Reset the modelview matrix
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 
 	glPushMatrix();
-	glRotatef(0, 0, 0, -1.0f); // Rotate the modelview matrix
+	glRotatef(0, 0, 0, -1.0f);
 	glBegin(GL_POLYGON);
 	{
 		glColor3f(1.0f, 0.0f, 0.0f);
@@ -86,7 +86,7 @@ void HelloGL::DrawRegularPolygon(vector2 center, float rotation, float radius, b
 
 	glBegin(filled ? GL_TRIANGLE_FAN : GL_LINE_LOOP);
 	for (int i = 0; i < sides; i++) {
-		float angle = 6.2832 * i / sides;  // 6.2832 represents 2*PI
+		float angle = 6.2832 * i / sides;
 		float x = radius * cos(angle);
 		float y = radius * sin(angle);
 		glVertex2f(x, y);
