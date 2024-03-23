@@ -7,7 +7,8 @@ float DegreesToRadians(float degrees) { return degrees * (3.1415926 / 180.0f); }
 HelloGL::HelloGL(int argc, char* argv[]) 
 {
 	bodies[0] = Body({ 0, 0 }, { 0, 0 }, 10000.0f);
-	bodies[1] = Body({ 0.3f, 0 }, { 0, 0.25f }, 450.0f);
+	bodies[1] = Body({ 0.1f, 0 }, { 0, 0.7f }, 400.0f);
+	bodies[1] = Body({ 0.3f, 0 }, { 0, 1.5f }, 400.0f);
 
 	GLUTCallbacks::Init(this);
 	glutInit(&argc, argv);
@@ -58,14 +59,14 @@ void HelloGL::Update()
 			}
 		}
 
-		bodies[b1_idx].velocity.x += a_g.x * 1/60.0f;
-		bodies[b1_idx].velocity.y += a_g.y * 1/60.0f;
+		bodies[b1_idx].velocity.x += a_g.x * 1/60.0f * timeScale;
+		bodies[b1_idx].velocity.y += a_g.y * 1/60.0f * timeScale;
 	}
 
 	for (size_t i = 0; i < body_count; i++)
 	{
-		bodies[i].position.x += bodies[i].velocity.x * 1/60.0f;
-		bodies[i].position.y += bodies[i].velocity.y * 1/60.0f;
+		bodies[i].position.x += bodies[i].velocity.x * 1/60.0f * timeScale;
+		bodies[i].position.y += bodies[i].velocity.y * 1/60.0f * timeScale;
 	}
 
 	glutPostRedisplay();

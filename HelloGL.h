@@ -58,6 +58,8 @@ public:
 	void Keyboard(unsigned char key, int x, int y);
 
 private:
-	Body bodies[2];
-	unsigned int body_count = 2;
+	Body bodies[3];
+	unsigned int body_count = 3;
+
+	float timeScale = 0.1f;
 };
