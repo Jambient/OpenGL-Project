@@ -28,8 +28,23 @@ namespace GLUTCallbacks
 		glutTimerFunc(preferredRefresh - updateTime, GLUTCallbacks::Timer, preferredRefresh);
 	}
 
-	void Keyboard(unsigned char key, int x, int y)
+	void KeyboardDown(unsigned char key, int x, int y)
 	{
-		helloGL->Keyboard(key, x, y);
+		helloGL->KeyboardDown(key, x, y);
+	}
+
+	void KeyboardUp(unsigned char key, int x, int y)
+	{
+		helloGL->KeyboardUp(key, x, y);
+	}
+
+	void Mouse(int button, int state, int x, int y)
+	{
+		helloGL->Mouse(button, state, x, y);
+	}
+
+	void Motion(int x, int y)
+	{
+		helloGL->Motion(x, y);
 	}
 }

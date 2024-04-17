@@ -3,77 +3,16 @@
 #include <iostream>
 #include "Structures.h"
 #include "Cube.h"
-
-//Vertex HelloGL::vertices[] = { 
-//	1, 1, 1, -1, 1, 1, -1,-1, 1, // v0-v1-v2 (front)
-//	-1,-1, 1, 1,-1, 1, 1, 1, 1, // v2-v3-v0
-//
-//	1, 1, 1, 1,-1, 1, 1,-1,-1, // v0-v3-v4 (right)
-//	1,-1,-1, 1, 1,-1, 1, 1, 1, // v4-v5-v0
-//
-//	1, 1, 1, 1, 1,-1, -1, 1,-1, // v0-v5-v6 (top)
-//	-1, 1,-1, -1, 1, 1, 1, 1, 1, // v6-v1-v0
-//
-//	-1, 1, 1, -1, 1,-1, -1,-1,-1, // v1-v6-v7 (left)
-//	-1,-1,-1, -1,-1, 1, -1, 1, 1, // v7-v2-v1
-//
-//	-1,-1,-1, 1,-1,-1, 1,-1, 1, // v7-v4-v3 (bottom)
-//	1,-1, 1, -1,-1, 1, -1,-1,-1, // v3-v2-v7
-//
-//	1,-1,-1, -1,-1,-1, -1, 1,-1, // v4-v7-v6 (back)
-//	-1, 1,-1, 1, 1,-1, 1,-1,-1 // v6-v5-v4
-//};
-//
-//Color HelloGL::colors[] = { 
-//	1, 1, 1, 1, 1, 0, 1, 0, 0, // v0-v1-v2 (front)
-//	1, 0, 0, 1, 0, 1, 1, 1, 1, // v2-v3-v0
-//
-//	1, 1, 1, 1, 0, 1, 0, 0, 1, // v0-v3-v4 (right)
-//	0, 0, 1, 0, 1, 1, 1, 1, 1, // v4-v5-v0
-//
-//	1, 1, 1, 0, 1, 1, 0, 1, 0, // v0-v5-v6 (top)
-//	0, 1, 0, 1, 1, 0, 1, 1, 1, // v6-v1-v0
-//
-//	1, 1, 0, 0, 1, 0, 0, 0, 0, // v1-v6-v7 (left)
-//	0, 0, 0, 1, 0, 0, 1, 1, 0, // v7-v2-v1
-//
-//	0, 0, 0, 0, 0, 1, 1, 0, 1, // v7-v4-v3 (bottom)
-//	1, 0, 1, 1, 0, 0, 0, 0, 0, // v3-v2-v7
-//
-//	0, 0, 1, 0, 0, 0, 0, 1, 0, // v4-v7-v6 (back)
-//	0, 1, 0, 0, 1, 1, 0, 0, 1  // v6-v5-v4
-//};
-//
-//Vertex HelloGL::indexedVertices[] = { 
-//	1, 1, 1, -1, 1, 1, // v0,v1,
-//	-1,-1, 1, 1,-1, 1, // v2,v3
-//	1,-1,-1, 1, 1,-1, // v4,v5
-//	-1, 1,-1, -1,-1,-1 // v6,v7
-//};
-//
-//Color HelloGL::indexedColors[] = { 
-//	1, 1, 1, 1, 1, 0, // v0,v1,
-//	1, 0, 0, 1, 0, 1, // v2,v3
-//	0, 0, 1, 0, 1, 1, // v4,v5
-//	0, 1, 0, 0, 0, 0 //v6,v7
-//};
-//
-//GLushort HelloGL::indices[] = { 
-//	0, 1, 2, 2, 3, 0, // front
-//	0, 3, 4, 4, 5, 0, // right
-//	0, 5, 6, 6, 1, 0, // top
-//	1, 6, 7, 7, 2, 1, // left
-//	7, 4, 3, 3, 2, 7, // bottom
-//	4, 7, 6, 6, 5, 4 // back 
-//};
+#include "Camera.h"
+#include "InputManager.h"
 
 float DegreesToRadians(float degrees) { return degrees * (3.1415926 / 180.0f); }
 
 HelloGL::HelloGL(int argc, char* argv[]) 
 {
-	camera = new Camera();
-	//cubeCount = 2;
+	camera = new Camera(Vector3(5.0f, 5.0f, -170.f), Vector3(0.0f, 0.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f));
 
+	Cube::Load((char*)"cube.txt");
 	for (int i = 0; i < cubeCount; i++)
 	{
 		cube[i] = new Cube(((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 10.0f);
@@ -81,9 +20,9 @@ HelloGL::HelloGL(int argc, char* argv[])
 	}
 
 	//camera->eye.x = 0.0f; camera->eye.y = 0.0f; camera->eye.z = 1.0f;
-	camera->eye.x = 5.0f; camera->eye.y = 5.0f; camera->eye.z = -170.0f;
+	/*camera->eye.x = 5.0f; camera->eye.y = 5.0f; camera->eye.z = -170.0f;
 	camera->center.x = 0.0f; camera->center.y = 0.0f; camera->center.z = 0.0f;
-	camera->up.x = 0.0f; camera->up.y = 1.0f; camera->up.z = 0.0f;
+	camera->up.x = 0.0f; camera->up.y = 1.0f; camera->up.z = 0.0f;*/
 
 	row1Rotation = 0.0f;
 	row2Rotation = 0.0f;
@@ -95,9 +34,13 @@ HelloGL::HelloGL(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(800, 800);
 	glutCreateWindow("Simple OpenGL Program");
+
 	glutDisplayFunc(GLUTCallbacks::Display);
 	glutTimerFunc(REFRESHRATE, GLUTCallbacks::Timer, REFRESHRATE);
-	glutKeyboardFunc(GLUTCallbacks::Keyboard);
+	glutKeyboardFunc(GLUTCallbacks::KeyboardDown);
+	glutKeyboardUpFunc(GLUTCallbacks::KeyboardUp);
+	glutMouseFunc(GLUTCallbacks::Mouse);
+	glutMotionFunc(GLUTCallbacks::Motion);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -161,7 +104,7 @@ void HelloGL::Display()
 void HelloGL::Update()
 {
 	glLoadIdentity();
-	gluLookAt(camera->eye.x, camera->eye.y, camera->eye.z, camera->center.x, camera->center.y, camera->center.z, camera->up.x, camera->up.y, camera->up.z);
+	camera->Update();
 
 	//row1Rotation = fmod(row1Rotation + 0.5f, 360.0f);
 	row2Rotation = fmod(row2Rotation + 1.5f, 360.0f);
@@ -172,6 +115,23 @@ void HelloGL::Update()
 	{
 		cube[i]->Update();
 	}
+
+	Vector3 cameraForwardVector = camera->GetForwardVector();
+	Vector3 cameraRightVector = camera->GetRightVector();
+	Vector3 cameraUpVector = camera->GetUpVector();
+
+	if (InputManager::IsKeyDown('w'))
+		camera->OffsetPosition(cameraForwardVector);
+	if (InputManager::IsKeyDown('s'))
+		camera->OffsetPosition(-cameraForwardVector);
+	if (InputManager::IsKeyDown('a'))
+		camera->OffsetPosition(-cameraRightVector);
+	if (InputManager::IsKeyDown('d'))
+		camera->OffsetPosition(cameraRightVector);
+	if (InputManager::IsKeyDown('e'))
+		camera->OffsetPosition(cameraUpVector);
+	if (InputManager::IsKeyDown('q'))
+		camera->OffsetPosition(-cameraUpVector);
 
 	glutPostRedisplay();
 }
@@ -248,21 +208,43 @@ void HelloGL::DrawTriangleFromAngles(float angle1, float angle2, float base, vec
 	glPopMatrix();
 }
 
-void HelloGL::Keyboard(unsigned char key, int x, int y)
+void HelloGL::KeyboardDown(unsigned char key, int x, int y)
 {
-	/*if (key == 'a')
-		row1Rotation -= 20.5f;
-	if (key == 'd')
-		row1Rotation += 20.5f;*/
+	InputManager::OnKeyboardDown(key);
+}
 
-	if (key == 'w')
-		camera->center.z -= 0.1f;
-	if (key == 's')
-		camera->center.z += 0.1f;
-	if (key == 'a')
-		camera->center.x -= 0.1f;
-	if (key == 'd')
-		camera->center.x += 0.1f;
+void HelloGL::KeyboardUp(unsigned char key, int x, int y)
+{
+	InputManager::OnKeyboardUp(key);
+}
+
+void HelloGL::Mouse(int button, int state, int x, int y)
+{
+	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
+		isRightClickDown = true;
+		ShowCursor(FALSE);
+		glutSetCursor(GLUT_CURSOR_NONE);
+		lockedMousePosition.x = x + glutGet(GLUT_WINDOW_X);
+		lockedMousePosition.y = y + glutGet(GLUT_WINDOW_Y);
+	}
+	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP) {
+		isRightClickDown = false;
+		ShowCursor(TRUE);
+		glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
+	}
+}
+
+void HelloGL::Motion(int x, int y)
+{
+	if (isRightClickDown)
+	{
+		Vector3 currentMousePosition = Vector3(x + glutGet(GLUT_WINDOW_X), y + glutGet(GLUT_WINDOW_Y), 0);
+		Vector3 mouseOffset = currentMousePosition - lockedMousePosition;
+
+		camera->OffsetRotation(Vector3(-mouseOffset.y, mouseOffset.x) * 0.01f);
+
+		SetCursorPos(lockedMousePosition.x, lockedMousePosition.y);
+	}
 }
 
 int main(int argc, char* argv[]) 

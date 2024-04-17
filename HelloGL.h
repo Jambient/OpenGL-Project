@@ -7,6 +7,7 @@
 #include <utility>
 #include "Structures.h"
 #include "Cube.h"
+#include "Camera.h"
 
 #define vector2 std::pair<double, double>
 #define REFRESHRATE 16
@@ -19,7 +20,10 @@ public:
 
 	void Update();
 	void Display();
-	void Keyboard(unsigned char key, int x, int y);
+	void KeyboardDown(unsigned char key, int x, int y);
+	void KeyboardUp(unsigned char key, int x, int y);
+	void Mouse(int button, int state, int x, int y);
+	void Motion(int x, int y);
 
 	void DrawPolygon();
 	void DrawRegularPolygon(vector2 center, float rotation, float radius, bool filled = true, float sides = 64.0f);
@@ -32,4 +36,8 @@ private:
 	Camera* camera;
 	int cubeCount = 100;
 	Cube* cube[100];
+
+	bool isRightClickDown;
+	Vector3 lastMousePosition;
+	Vector3 lockedMousePosition;
 };
