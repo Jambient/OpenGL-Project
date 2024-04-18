@@ -11,7 +11,7 @@ class Cube
 private:
 	static std::vector<Vertex>* indexedVertices;
 	static std::vector<Color>* indexedColors;
-	static std::vector<GLuint>* indices;
+	static std::vector<GLushort>* indices;
 	static int numVertices, numColors, numIndices;
 
 	GLfloat _rotation;
