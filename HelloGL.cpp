@@ -12,7 +12,8 @@ HelloGL::HelloGL(int argc, char* argv[])
 {
 	camera = new Camera(Vector3(5.0f, 5.0f, -170.f), Vector3(0.0f, 0.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f));
 
-	Cube::Load((char*)"cube.txt");
+	//Cube::LoadTXT((char*)"cube.txt");
+	Cube::LoadOBJ((char*)"teapot.obj");
 	for (int i = 0; i < cubeCount; i++)
 	{
 		cube[i] = new Cube(((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 10.0f);
