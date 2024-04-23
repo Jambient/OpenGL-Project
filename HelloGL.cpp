@@ -5,59 +5,14 @@
 #include "Cube.h"
 #include "Camera.h"
 #include "InputManager.h"
+#include "MeshLoader.h"
 
 float DegreesToRadians(float degrees) { return degrees * (3.1415926 / 180.0f); }
 
 HelloGL::HelloGL(int argc, char* argv[]) 
 {
-	camera = new Camera(Vector3(5.0f, 5.0f, -170.f), Vector3(0.0f, 0.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f));
-
-	Cube::LoadTXT((char*)"cube.txt");
-	//Cube::LoadOBJ((char*)"teapot.obj");
-	for (int i = 0; i < cubeCount; i++)
-	{
-		cube[i] = new Cube(((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 10.0f);
-		//cube[i] = new Cube(1.0f, 0.0f, 0.0f);
-	}
-
-	//camera->eye.x = 0.0f; camera->eye.y = 0.0f; camera->eye.z = 1.0f;
-	/*camera->eye.x = 5.0f; camera->eye.y = 5.0f; camera->eye.z = -170.0f;
-	camera->center.x = 0.0f; camera->center.y = 0.0f; camera->center.z = 0.0f;
-	camera->up.x = 0.0f; camera->up.y = 1.0f; camera->up.z = 0.0f;*/
-
-	row1Rotation = 0.0f;
-	row2Rotation = 0.0f;
-	row3Rotation = 0.0f;
-	scale = 0.0f;
-
-	GLUTCallbacks::Init(this);
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
-	glutInitWindowSize(800, 800);
-	glutCreateWindow("Simple OpenGL Program");
-
-	glutDisplayFunc(GLUTCallbacks::Display);
-	glutTimerFunc(REFRESHRATE, GLUTCallbacks::Timer, REFRESHRATE);
-	glutKeyboardFunc(GLUTCallbacks::KeyboardDown);
-	glutKeyboardUpFunc(GLUTCallbacks::KeyboardUp);
-	glutMouseFunc(GLUTCallbacks::Mouse);
-	glutMotionFunc(GLUTCallbacks::Motion);
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	
-	// Set the viewport to be the entire window
-	glViewport(0, 0, 800, 800);
-
-	// Set the correct perspective
-	gluPerspective(45, 1, 0.1f, 200);
-
-	glMatrixMode(GL_MODELVIEW);
-
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	glEnable(GL_DEPTH_TEST);
+	InitGL(argc, argv);
+	InitObjects();
 
 	glutMainLoop();
 }
@@ -67,9 +22,9 @@ HelloGL::~HelloGL(void)
 	delete camera;
 	camera = nullptr;
 
-	for (int i = 0; i < cubeCount; i++)
+	for (int i = 0; i < objectCount; i++)
 	{
-		delete cube[i];
+		delete objects[i];
 	}
 }
 
@@ -93,9 +48,9 @@ void HelloGL::Display()
 	glRotatef(row2Rotation, 1.0f, 1.0f, 1.0f);
 	glPopMatrix();*/
 
-	for (int i = 0; i < cubeCount; i++)
+	for (int i = 0; i < objectCount; i++)
 	{
-		cube[i]->Draw();
+		objects[i]->Draw();
 	}
 
 	glFlush();
@@ -112,9 +67,9 @@ void HelloGL::Update()
 	row3Rotation = fmod(row3Rotation - 0.5f, 360.0f);
 	scale = abs(sin(glutGet(GLUT_ELAPSED_TIME) / 500.0f)) / 1.5f + 0.2f;
 
-	for (int i = 0; i < cubeCount; i++)
+	for (int i = 0; i < objectCount; i++)
 	{
-		cube[i]->Update();
+		objects[i]->Update();
 	}
 
 	Vector3 cameraForwardVector = camera->GetForwardVector();
@@ -246,6 +201,63 @@ void HelloGL::Motion(int x, int y)
 
 		SetCursorPos(lockedMousePosition.x, lockedMousePosition.y);
 	}
+}
+
+void HelloGL::InitObjects()
+{
+	camera = new Camera(Vector3(5.0f, 5.0f, -170.f), Vector3(0.0f, 0.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f));
+
+	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
+	Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");
+	Mesh* teapotMesh = MeshLoader::LoadOBJ((char*)"teapot.obj");
+	Mesh* cowMesh = MeshLoader::LoadOBJ((char*)"cow.obj");
+
+	for (int i = 0; i < objectCount / 2; i++)
+	{
+		objects[i] = new Cube(cowMesh, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 10.0f);
+	}
+	for (int i = objectCount / 2; i < objectCount; i++)
+	{
+		objects[i] = new Cube(cubeMesh, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 10.0f);
+	}
+
+	row1Rotation = 0.0f;
+	row2Rotation = 0.0f;
+	row3Rotation = 0.0f;
+	scale = 0.0f;
+}
+
+void HelloGL::InitGL(int argc, char* argv[])
+{
+
+	GLUTCallbacks::Init(this);
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
+	glutInitWindowSize(800, 800);
+	glutCreateWindow("Simple OpenGL Program");
+
+	glutDisplayFunc(GLUTCallbacks::Display);
+	glutTimerFunc(REFRESHRATE, GLUTCallbacks::Timer, REFRESHRATE);
+	glutKeyboardFunc(GLUTCallbacks::KeyboardDown);
+	glutKeyboardUpFunc(GLUTCallbacks::KeyboardUp);
+	glutMouseFunc(GLUTCallbacks::Mouse);
+	glutMotionFunc(GLUTCallbacks::Motion);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	// Set the viewport to be the entire window
+	glViewport(0, 0, 800, 800);
+
+	// Set the correct perspective
+	gluPerspective(45, 1, 0.1f, 200);
+
+	glMatrixMode(GL_MODELVIEW);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glEnable(GL_DEPTH_TEST);
 }
 
 int main(int argc, char* argv[]) 

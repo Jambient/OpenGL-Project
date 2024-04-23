@@ -25,6 +25,9 @@ public:
 	void Mouse(int button, int state, int x, int y);
 	void Motion(int x, int y);
 
+	void InitObjects();
+	void InitGL(int argc, char* argv[]);
+
 	void DrawPolygon();
 	void DrawRegularPolygon(vector2 center, float rotation, float radius, bool filled = true, float sides = 64.0f);
 	void DrawTriangleFromAngles(float angle1, float angle2, float base, vector2 pos, float rotation);
@@ -34,8 +37,8 @@ private:
 	float scale;
 
 	Camera* camera;
-	int cubeCount = 100;
-	Cube* cube[100];
+	int objectCount = 100;
+	SceneObject* objects[100];
 
 	bool isRightClickDown;
 	Vector3 lastMousePosition;
