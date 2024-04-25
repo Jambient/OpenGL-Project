@@ -37,8 +37,8 @@ private:
 	float scale;
 
 	Camera* camera;
-	int objectCount = 100;
-	SceneObject* objects[100];
+	int objectCount = 50;
+	SceneObject* objects[50];
 
 	bool isRightClickDown;
 	Vector3 lastMousePosition;

@@ -14,7 +14,7 @@ private:
 	Vector3 _position;
 
 public:
-	Cube(Mesh* mesh, float x, float y, float z);
+	Cube(Mesh* mesh, float x, float y, float z, float rotation = 0.0f);
 	~Cube();
 
 	void Draw();

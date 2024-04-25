@@ -31,22 +31,6 @@ HelloGL::~HelloGL(void)
 void HelloGL::Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-
-	/*DrawTriangleFromAngles(30, 20, 0.3f, std::make_pair(-0.7f, 0.5f), row1Rotation);
-	DrawTriangleFromAngles(70, 70, 0.3f, std::make_pair(-0.15f, 0.5f), row1Rotation);
-	DrawTriangleFromAngles(60, 60, 0.3f, std::make_pair(0.4f, 0.5f), row1Rotation);
-	DrawTriangleFromAngles(70, 45, 0.3f, std::make_pair(-0.7f, -0.1f), row2Rotation);
-	DrawTriangleFromAngles(90, 45, 0.3f, std::make_pair(-0.15f, -0.1f), row2Rotation);
-	DrawTriangleFromAngles(110, 30, 0.3f, std::make_pair(0.4f, -0.1f), row2Rotation);
-
-	DrawRegularPolygon(std::make_pair(-0.5f, -0.5f), row3Rotation, 0.2f, true, 5);
-	DrawRegularPolygon(std::make_pair(0, -0.5f), row3Rotation, 0.2f, true, 6);
-	DrawRegularPolygon(std::make_pair(0.5f, -0.5f), row3Rotation, 0.2f, true, 7);*/
-
-	/*glPushMatrix();
-	glRotatef(row2Rotation, 1.0f, 1.0f, 1.0f);
-	glPopMatrix();*/
 
 	for (int i = 0; i < objectCount; i++)
 	{
@@ -214,11 +198,11 @@ void HelloGL::InitObjects()
 
 	for (int i = 0; i < objectCount / 2; i++)
 	{
-		objects[i] = new Cube(cowMesh, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 10.0f);
+		objects[i] = new Cube(teapotMesh, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
 	}
 	for (int i = objectCount / 2; i < objectCount; i++)
 	{
-		objects[i] = new Cube(cubeMesh, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 10.0f);
+		objects[i] = new Cube(cowMesh, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
 	}
 
 	row1Rotation = 0.0f;
