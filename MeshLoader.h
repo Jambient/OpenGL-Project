@@ -6,4 +6,3 @@ namespace MeshLoader
 	Mesh* LoadTXT(char* path);
 	Mesh* LoadOBJ(char* path);
 };
-

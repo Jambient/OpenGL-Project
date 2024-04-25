@@ -34,6 +34,18 @@ namespace MeshLoader
 		}
 	}
 
+	void LoadTexCoords(ifstream& inFile, Mesh& mesh)
+	{
+		inFile >> mesh.TexCoordCount;
+
+		for (int i = 0; i < mesh.TexCoordCount; i++)
+		{
+			TexCoord texCoord;
+			inFile >> texCoord.u >> texCoord.v;
+			mesh.TexCoords->push_back(texCoord);
+		}
+	}
+
 	void LoadIndices(ifstream& inFile, Mesh& mesh)
 	{
 		inFile >> mesh.IndexCount;
@@ -65,14 +77,17 @@ namespace MeshLoader
 		mesh->Vertices = new std::vector<Vertex>();
 		mesh->Indices = new std::vector<GLushort>();
 		mesh->Colors = new std::vector<Color>();
+		mesh->TexCoords = new std::vector<TexCoord>();
 
 		LoadVertices(inFile, *mesh);
 		LoadColours(inFile, *mesh);
+		LoadTexCoords(inFile, *mesh);
 		LoadIndices(inFile, *mesh);
 
 		mesh->Vertices->shrink_to_fit();
 		mesh->Colors->shrink_to_fit();
 		mesh->Indices->shrink_to_fit();
+		mesh->TexCoords->shrink_to_fit();
 
 		inFile.close();
 

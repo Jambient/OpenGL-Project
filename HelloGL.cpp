@@ -191,18 +191,22 @@ void HelloGL::InitObjects()
 {
 	camera = new Camera(Vector3(5.0f, 5.0f, -170.f), Vector3(0.0f, 0.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f));
 
+	Texture2D* texture = new Texture2D();
+	//texture->LoadRAW((char*)"penguins.raw", 512, 512);
+	texture->LoadTGA((char*)"cat.tga");
+
 	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
-	Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");
+	/*Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");
 	Mesh* teapotMesh = MeshLoader::LoadOBJ((char*)"teapot.obj");
-	Mesh* cowMesh = MeshLoader::LoadOBJ((char*)"cow.obj");
+	Mesh* cowMesh = MeshLoader::LoadOBJ((char*)"cow.obj");*/
 
 	for (int i = 0; i < objectCount / 2; i++)
 	{
-		objects[i] = new Cube(teapotMesh, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
+		objects[i] = new Cube(cubeMesh, texture, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
 	}
 	for (int i = objectCount / 2; i < objectCount; i++)
 	{
-		objects[i] = new Cube(cowMesh, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
+		objects[i] = new Cube(cubeMesh, texture, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
 	}
 
 	row1Rotation = 0.0f;
@@ -238,10 +242,10 @@ void HelloGL::InitGL(int argc, char* argv[])
 
 	glMatrixMode(GL_MODELVIEW);
 
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-
-	glEnable(GL_DEPTH_TEST);
 }
 
 int main(int argc, char* argv[]) 
