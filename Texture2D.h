@@ -15,6 +15,7 @@ public:
 
 	bool LoadRAW(char* path, int width, int height);
 	bool LoadTGA(char* path);
+	bool LoadBMP(char* path);
 
 	GLuint GetID() const { return _ID; }
 	int GetWidth() const { return _width; }

@@ -102,3 +102,41 @@ bool Texture2D::LoadTGA(char* path)
 
     return true;
 }
+
+bool Texture2D::LoadBMP(char* path)
+{
+    BITMAPFILEHEADER fileHeaderData;
+    BITMAPINFOHEADER infoHeaderData;
+    char* tempTextureData;
+
+    ifstream inFile;
+    inFile.open(path, ios::binary);
+    if (!inFile.good())
+    {
+        cerr << "Can't open texture file " << path << endl;
+        return false;
+    }
+
+    inFile.seekg(0, ios::beg);
+    inFile.read(reinterpret_cast<char*>(&fileHeaderData), sizeof(BITMAPFILEHEADER));
+    inFile.read(reinterpret_cast<char*>(&infoHeaderData), sizeof(BITMAPINFOHEADER));
+
+    if (infoHeaderData.biWidth != infoHeaderData.biHeight)
+    {
+        cerr << "Texture file is not square: " << path << endl;
+        return false;
+    }
+
+    inFile.seekg(fileHeaderData.bfOffBits, ios::beg);
+    tempTextureData = new char[infoHeaderData.biSizeImage];
+    inFile.read(tempTextureData, infoHeaderData.biSizeImage);
+    inFile.close();
+
+    glGenTextures(1, &_ID); //Get next Texture ID
+    glBindTexture(GL_TEXTURE_2D, _ID); //Bind the texture to the ID
+    gluBuild2DMipmaps(GL_TEXTURE_2D, infoHeaderData.biBitCount / 8, infoHeaderData.biWidth, infoHeaderData.biHeight, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
+
+    delete[] tempTextureData;
+
+    return true;
+}

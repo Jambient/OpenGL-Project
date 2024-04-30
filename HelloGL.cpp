@@ -53,7 +53,7 @@ void HelloGL::Update()
 
 	for (int i = 0; i < objectCount; i++)
 	{
-		objects[i]->Update();
+		//objects[i]->Update();
 	}
 
 	Vector3 cameraForwardVector = camera->GetForwardVector();
@@ -195,6 +195,9 @@ void HelloGL::InitObjects()
 	//texture->LoadRAW((char*)"penguins.raw", 512, 512);
 	texture->LoadTGA((char*)"cat.tga");
 
+	Texture2D* texture2 = new Texture2D();
+	texture2->LoadBMP((char*)"funnycat.bmp");
+
 	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
 	/*Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");
 	Mesh* teapotMesh = MeshLoader::LoadOBJ((char*)"teapot.obj");
@@ -206,7 +209,7 @@ void HelloGL::InitObjects()
 	}
 	for (int i = objectCount / 2; i < objectCount; i++)
 	{
-		objects[i] = new Cube(cubeMesh, texture, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
+		objects[i] = new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
 	}
 
 	row1Rotation = 0.0f;
