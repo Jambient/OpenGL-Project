@@ -40,11 +40,12 @@ Vector3 Camera::GetRightVector()
 	return GetRotatedVector(lookVector).cross(GetRotatedVector(upVector));
 }
 
-void Camera::Update()
+void Camera::Update(glm::mat4& viewMatrix)
 {
 	Vector3 newLookVector = Vector3(lookVector);
 	Vector3 newUpVector = GetRotatedVector(upVector);
 
 	Vector3 center = position + GetRotatedVector(newLookVector);
 	gluLookAt(position.x, position.y, position.z, center.x, center.y, center.z, upVector.x, upVector.y, upVector.z);
+	viewMatrix = glm::lookAt(glm::vec3(position.x, position.y, position.z), glm::vec3(center.x, center.y, center.z), glm::vec3(upVector.x, upVector.y, upVector.z));
 }

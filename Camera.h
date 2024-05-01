@@ -1,10 +1,14 @@
 #pragma once
+#define NOMINMAX
 #include <Windows.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "GL/freeglut.h"
 #include "GLUTCallbacks.h"
 #include "Structures.h"
+#include <algorithm>
 
 class Camera
 {
@@ -27,7 +31,7 @@ public:
 	void OffsetPosition(Vector3 _offset) { position += _offset; }
 
 	void SetRotation(Vector3 _rotation) { rotation = _rotation; }
-	void OffsetRotation(Vector3 _offset) { rotation += _offset; rotation.x = min(max(rotation.x, -89.0f), 89.0f); }
+	void OffsetRotation(Vector3 _offset) { rotation += _offset; rotation.x = std::min(std::max(rotation.x, -89.0f), 89.0f); }
 
-	void Update();
+	void Update(glm::mat4& viewMatrix);
 };

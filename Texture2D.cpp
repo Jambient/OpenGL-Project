@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include "Texture2D.h"
 
 using namespace std;
@@ -137,6 +138,104 @@ bool Texture2D::LoadBMP(char* path)
     gluBuild2DMipmaps(GL_TEXTURE_2D, infoHeaderData.biBitCount / 8, infoHeaderData.biWidth, infoHeaderData.biHeight, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
 
     delete[] tempTextureData;
+
+    return true;
+}
+
+uint32_t swapEndian(uint32_t value) {
+    return ((value & 0xFF000000) >> 24) |
+        ((value & 0x00FF0000) >> 8) |
+        ((value & 0x0000FF00) << 8) |
+        ((value & 0x000000FF) << 24);
+}
+
+ChunkData* readNextChunk(std::ifstream& inFile) {
+    ChunkData* chunkData = new ChunkData;
+
+    // Read chunk length
+    inFile.read(reinterpret_cast<char*>(&chunkData->length), sizeof(chunkData->length));
+    if (inFile.eof()) { // Check if end of file is reached
+        delete chunkData; // Clean up allocated memory
+        return nullptr; // Return nullptr indicating end of file
+    }
+    chunkData->length = swapEndian(chunkData->length);
+
+    // Read chunk type
+    char buffer[5];
+    inFile.read(buffer, 4);
+    buffer[4] = '\0';
+    chunkData->type = buffer;
+
+    // Read chunk data
+    chunkData->data.resize(chunkData->length);
+    inFile.read(chunkData->data.data(), chunkData->length);
+
+    // Seek past CRC
+    inFile.seekg(4, ios::cur);
+
+    return chunkData;
+}
+
+/*ChunkData readUntilChunkType(ifstream& inFile, std::string type)
+{
+    ChunkData temp;
+    do {
+        temp = readNextChunk(inFile);
+    } while (temp.type != type);
+
+    return temp;
+}*/
+
+bool Texture2D::LoadPNG(char* path)
+{
+    PNGFILEHEADER fileHeaderData;
+    PNGINFOHEADER infoHeaderData;
+    ChunkData* chunkData;
+
+    ifstream inFile;
+    inFile.open(path, ios::binary);
+    if (!inFile.good())
+    {
+        cerr << "Can't open texture file " << path << endl;
+        return false;
+    }
+
+    inFile.read(reinterpret_cast<char*>(&fileHeaderData), sizeof(PNGFILEHEADER));
+    if (!(fileHeaderData.signature[1] == 'P' && fileHeaderData.signature[2] == 'N' && fileHeaderData.signature[3] == 'G')) {
+        cerr << "Not a valid PNG file: " << path << endl;
+        return false;
+    }
+
+    std::vector<char>* textureData = new std::vector<char>();
+
+    chunkData = readNextChunk(inFile);
+    cout << chunkData->length << " : " << chunkData->type << endl;
+    infoHeaderData = *reinterpret_cast<PNGINFOHEADER*>(chunkData->data.data());
+    infoHeaderData.width = swapEndian(infoHeaderData.width);
+    infoHeaderData.height = swapEndian(infoHeaderData.height);
+
+    while (chunkData != nullptr) {
+        cout << chunkData->length << " : " << chunkData->type << endl;
+        if (chunkData->type == "IDAT")
+        {
+            //textureData->insert(textureData->end(), chunkData->data.begin(), chunkData->data.end());
+            for (int i = 0; i < 20; i++) {
+                cout << "Byte " << i << ": 0x" << hex << (int)(unsigned char)chunkData->data[i] << endl << dec;
+            }
+        }
+
+        chunkData = readNextChunk(inFile);
+    }
+
+    inFile.close();
+
+    cout << "DATA: " << textureData->size() << endl;
+    cout << infoHeaderData.width << " : " << infoHeaderData.height << endl;
+    cout << (int)infoHeaderData.bitDepth << " : " << (int)infoHeaderData.colorType << endl;
+
+    /*glGenTextures(1, &_ID);
+    glBindTexture(GL_TEXTURE_2D, _ID);
+    gluBuild2DMipmaps(GL_TEXTURE_2D, 3, infoHeaderData.width, infoHeaderData.height, GL_RGB, GL_UNSIGNED_BYTE, textureData->data());*/
 
     return true;
 }

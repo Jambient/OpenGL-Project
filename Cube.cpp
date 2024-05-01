@@ -43,6 +43,6 @@ void Cube::Draw()
 
 void Cube::Update()
 {
-	_rotation += 1.0f;
-	_position.z = std::fmod(_position.z - 0.4f, -200.0f);
+	//_rotation += 1.0f;
+	//_position.z = std::fmod(_position.z - 0.4f, -200.0f);
 }

@@ -3,11 +3,14 @@
 #include <iostream>
 #include "Structures.h"
 #include "Cube.h"
+#include "MovingCube.h"
 #include "Camera.h"
 #include "InputManager.h"
 #include "MeshLoader.h"
 
 float DegreesToRadians(float degrees) { return degrees * (3.1415926 / 180.0f); }
+#define VIEWPORT_WIDTH 800
+#define VIEWPORT_HEIGHT 800
 
 HelloGL::HelloGL(int argc, char* argv[]) 
 {
@@ -22,7 +25,7 @@ HelloGL::~HelloGL(void)
 	delete camera;
 	camera = nullptr;
 
-	for (int i = 0; i < objectCount; i++)
+	for (int i = 0; i < objects.size(); i++)
 	{
 		delete objects[i];
 	}
@@ -32,7 +35,7 @@ void HelloGL::Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for (int i = 0; i < objectCount; i++)
+	for (int i = 0; i < objects.size(); i++)
 	{
 		objects[i]->Draw();
 	}
@@ -44,16 +47,16 @@ void HelloGL::Display()
 void HelloGL::Update()
 {
 	glLoadIdentity();
-	camera->Update();
+	camera->Update(viewMatrix);
 
 	//row1Rotation = fmod(row1Rotation + 0.5f, 360.0f);
 	row2Rotation = fmod(row2Rotation + 1.5f, 360.0f);
 	row3Rotation = fmod(row3Rotation - 0.5f, 360.0f);
 	scale = abs(sin(glutGet(GLUT_ELAPSED_TIME) / 500.0f)) / 1.5f + 0.2f;
 
-	for (int i = 0; i < objectCount; i++)
+	for (int i = 0; i < objects.size(); i++)
 	{
-		//objects[i]->Update();
+		objects[i]->Update();
 	}
 
 	Vector3 cameraForwardVector = camera->GetForwardVector();
@@ -148,6 +151,30 @@ void HelloGL::DrawTriangleFromAngles(float angle1, float angle2, float base, vec
 	glPopMatrix();
 }
 
+void HelloGL::Raycast(int mouseX, int mouseY)
+{
+	// convert to 3d normalised device coordinates
+	float viewportX = (2.0f * mouseX) / VIEWPORT_WIDTH - 1.0f;
+	float viewportY = 1.0f - (2.0f * mouseY) / VIEWPORT_HEIGHT;
+	glm::vec3 rayNDS(viewportX, viewportY, 1.0f);
+
+	// convert to 4d homogeneous clip coordinates
+	glm::vec4 rayClip = glm::vec4(rayNDS.x, rayNDS.y, -1.0, 1.0);
+
+	// convert to 4d eye coordinates
+	glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
+	rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
+
+	// convert to 4d world coordinates
+	glm::vec3 rayDirection = glm::normalize(glm::vec3(glm::inverse(viewMatrix) * rayEye));
+
+	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
+	Texture2D* texture3 = new Texture2D();
+	texture3->LoadBMP((char*)"transparent-cat.bmp");
+
+	objects.push_back(new MovingCube(cubeMesh, texture3, camera->GetPosition(), Vector3(rayDirection.x, rayDirection.y, rayDirection.z)));
+}
+
 void HelloGL::KeyboardDown(unsigned char key, int x, int y)
 {
 	InputManager::OnKeyboardDown(key);
@@ -160,17 +187,24 @@ void HelloGL::KeyboardUp(unsigned char key, int x, int y)
 
 void HelloGL::Mouse(int button, int state, int x, int y)
 {
-	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
+	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) 
+	{
 		isRightClickDown = true;
 		ShowCursor(FALSE);
 		glutSetCursor(GLUT_CURSOR_NONE);
 		lockedMousePosition.x = x + glutGet(GLUT_WINDOW_X);
 		lockedMousePosition.y = y + glutGet(GLUT_WINDOW_Y);
 	}
-	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP) {
+	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP) 
+	{
 		isRightClickDown = false;
 		ShowCursor(TRUE);
 		glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
+	}
+
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		Raycast(x, y);
 	}
 }
 
@@ -192,8 +226,8 @@ void HelloGL::InitObjects()
 	camera = new Camera(Vector3(5.0f, 5.0f, -170.f), Vector3(0.0f, 0.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f));
 
 	Texture2D* texture = new Texture2D();
-	//texture->LoadRAW((char*)"penguins.raw", 512, 512);
-	texture->LoadTGA((char*)"cat.tga");
+	texture->LoadRAW((char*)"penguins.raw", 512, 512);
+	//texture->LoadTGA((char*)"cat.tga");
 
 	Texture2D* texture2 = new Texture2D();
 	texture2->LoadBMP((char*)"funnycat.bmp");
@@ -201,23 +235,31 @@ void HelloGL::InitObjects()
 	Texture2D* texture3 = new Texture2D();
 	texture3->LoadBMP((char*)"transparent-cat.bmp");
 
+	Texture2D* texture4 = new Texture2D();
+	texture4->LoadPNG((char*)"new-cat.png");
+
 	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
 	Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");
 	/*Mesh* teapotMesh = MeshLoader::LoadOBJ((char*)"teapot.obj");
 	Mesh* cowMesh = MeshLoader::LoadOBJ((char*)"cow.obj");*/
 
-	for (int i = 0; i < objectCount / 4; i++)
+	objects = std::vector<SceneObject*>();
+	for (int i = 0; i < 10; i++)
 	{
-		objects[i] = new Cube(cubeMesh, texture, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
+		objects.push_back(new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360));
+	}
+	/*for (int i = 0; i < objectCount / 4; i++)
+	{
+		objects[i] = new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
 	}
 	for (int i = objectCount / 4; i < objectCount / 2; i++)
 	{
-		objects[i] = new Cube(pyramidMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
+		objects[i] = new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
 	}
 	for (int i = objectCount / 2; i < objectCount; i++)
 	{
-		objects[i] = new Cube(cubeMesh, texture3, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
-	}
+		objects[i] = new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
+	}*/
 
 	row1Rotation = 0.0f;
 	row2Rotation = 0.0f;
@@ -245,10 +287,11 @@ void HelloGL::InitGL(int argc, char* argv[])
 	glLoadIdentity();
 
 	// Set the viewport to be the entire window
-	glViewport(0, 0, 800, 800);
+	glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
 	// Set the correct perspective
 	gluPerspective(45, 1, 0.1f, 200);
+	projectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 200.0f);
 
 	glMatrixMode(GL_MODELVIEW);
 
