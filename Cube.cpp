@@ -3,10 +3,10 @@
 #include <vector>
 #include "Cube.h"
 
-Cube::Cube(Mesh* mesh, Texture2D* texture, float x, float y, float z, float rotation) : SceneObject(mesh, texture)
+Cube::Cube(Mesh* mesh, Texture2D* texture, float x, float y, float z, float rotation) : SceneObject(mesh, texture, Vector3(x, y, z))
 {
 	_position.x = x; _position.y = y; _position.z = z;
-	_rotation = rotation;
+	//_rotation = rotation;
 }
 
 Cube::~Cube()

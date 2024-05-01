@@ -1,6 +1,6 @@
 #include "MovingCube.h"
 
-MovingCube::MovingCube(Mesh* mesh, Texture2D* texture, Vector3 initialPosition, Vector3 velocity): SceneObject(mesh, texture)
+MovingCube::MovingCube(Mesh* mesh, Texture2D* texture, Vector3 initialPosition, Vector3 velocity): SceneObject(mesh, texture, initialPosition)
 {
 	_position = initialPosition;
 	_velocity = velocity;

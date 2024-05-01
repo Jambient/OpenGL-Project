@@ -167,12 +167,36 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 
 	// convert to 4d world coordinates
 	glm::vec3 rayDirection = glm::normalize(glm::vec3(glm::inverse(viewMatrix) * rayEye));
+	Vector3 rayOrigin = camera->GetPosition();
 
 	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
 	Texture2D* texture3 = new Texture2D();
 	texture3->LoadBMP((char*)"transparent-cat.bmp");
 
-	objects.push_back(new MovingCube(cubeMesh, texture3, camera->GetPosition(), Vector3(rayDirection.x, rayDirection.y, rayDirection.z)));
+	float closestIntersection = std::numeric_limits<float>::max();
+	SceneObject* closestObject = nullptr;
+
+	for (SceneObject* obj : objects) {
+		// Perform ray-object intersection test
+		/*float intersectionDistance = obj->RayIntersection(rayOrigin, rayDirection);*/
+		Vector3 offset = obj->GetPosition() - rayOrigin;
+		float distanceAlongRay = glm::dot(glm::vec3(offset.x, offset.y, offset.z), rayDirection);
+
+		if (distanceAlongRay < 0) continue;
+
+		glm::vec3 intersectionPoint = glm::vec3(rayOrigin.x, rayOrigin.y, rayOrigin.z) + rayDirection * distanceAlongRay;
+
+		float intersectionDistance = obj->SignedDistanceField(intersectionPoint);
+
+		std::cout << "DISTANCE: " << intersectionDistance << std::endl;
+
+		if (intersectionDistance > 0 && intersectionDistance < closestIntersection) {
+			closestIntersection = intersectionDistance;
+			closestObject = obj;
+		}
+	}
+
+	std::cout << (closestObject != nullptr) << std::endl;
 }
 
 void HelloGL::KeyboardDown(unsigned char key, int x, int y)
@@ -244,7 +268,7 @@ void HelloGL::InitObjects()
 	Mesh* cowMesh = MeshLoader::LoadOBJ((char*)"cow.obj");*/
 
 	objects = std::vector<SceneObject*>();
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 1; i++)
 	{
 		objects.push_back(new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360));
 	}
