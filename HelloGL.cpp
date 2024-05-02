@@ -8,7 +8,6 @@
 #include "InputManager.h"
 #include "MeshLoader.h"
 
-float DegreesToRadians(float degrees) { return degrees * (3.1415926 / 180.0f); }
 #define VIEWPORT_WIDTH 800
 #define VIEWPORT_HEIGHT 800
 
@@ -56,7 +55,10 @@ void HelloGL::Update()
 
 	for (int i = 0; i < objects.size(); i++)
 	{
-		objects[i]->Update();
+		if (objects[i] == selectedObject)
+		{
+			objects[i]->Update();
+		}
 	}
 
 	Vector3 cameraForwardVector = camera->GetForwardVector();
@@ -127,9 +129,9 @@ void HelloGL::DrawTriangleFromAngles(float angle1, float angle2, float base, vec
 	}
 
 	float angle3 = 180 - angle1 - angle2;
-	float side1 = (base * sin(DegreesToRadians(angle3))) / sin(DegreesToRadians(angle2));
+	float side1 = (base * sin(glm::radians(angle3))) / sin(glm::radians(angle2));
 
-	vector2 side1_direction = std::make_pair(cos(DegreesToRadians(angle1)), sin(DegreesToRadians(angle1)));
+	vector2 side1_direction = std::make_pair(cos(glm::radians(angle1)), sin(glm::radians(angle1)));
 
 	vector2 secondVertex = std::make_pair(side1_direction.first * side1, side1_direction.second * side1);
 	vector2 centroid = std::make_pair((secondVertex.first + base) / 3.0f, secondVertex.second / 3.0f);
@@ -177,8 +179,6 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 	SceneObject* closestObject = nullptr;
 
 	for (SceneObject* obj : objects) {
-		// Perform ray-object intersection test
-		/*float intersectionDistance = obj->RayIntersection(rayOrigin, rayDirection);*/
 		Vector3 offset = obj->GetPosition() - rayOrigin;
 		float distanceAlongRay = glm::dot(glm::vec3(offset.x, offset.y, offset.z), rayDirection);
 
@@ -188,15 +188,13 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 
 		float intersectionDistance = obj->SignedDistanceField(intersectionPoint);
 
-		std::cout << "DISTANCE: " << intersectionDistance << std::endl;
-
-		if (intersectionDistance > 0 && intersectionDistance < closestIntersection) {
+		if (intersectionDistance < 0 && distanceAlongRay < closestIntersection) {
 			closestIntersection = intersectionDistance;
 			closestObject = obj;
 		}
 	}
 
-	std::cout << (closestObject != nullptr) << std::endl;
+	selectedObject = closestObject;
 }
 
 void HelloGL::KeyboardDown(unsigned char key, int x, int y)
@@ -253,24 +251,24 @@ void HelloGL::InitObjects()
 	texture->LoadRAW((char*)"penguins.raw", 512, 512);
 	//texture->LoadTGA((char*)"cat.tga");
 
-	Texture2D* texture2 = new Texture2D();
+	/*Texture2D* texture2 = new Texture2D();
 	texture2->LoadBMP((char*)"funnycat.bmp");
 
 	Texture2D* texture3 = new Texture2D();
 	texture3->LoadBMP((char*)"transparent-cat.bmp");
 
 	Texture2D* texture4 = new Texture2D();
-	texture4->LoadPNG((char*)"new-cat.png");
+	texture4->LoadPNG((char*)"new-cat.png");*/
 
 	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
-	Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");
+	//Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");
 	/*Mesh* teapotMesh = MeshLoader::LoadOBJ((char*)"teapot.obj");
 	Mesh* cowMesh = MeshLoader::LoadOBJ((char*)"cow.obj");*/
 
 	objects = std::vector<SceneObject*>();
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < 20; i++)
 	{
-		objects.push_back(new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360));
+		objects.push_back(new Cube(cubeMesh, texture, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360));
 	}
 	/*for (int i = 0; i < objectCount / 4; i++)
 	{

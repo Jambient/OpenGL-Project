@@ -7,7 +7,7 @@ using namespace std;
 namespace MeshLoader
 {
 	void LoadVertices(ifstream& inFile, Mesh& mesh);
-	void LoadColours(ifstream& inFile, Mesh& mesh);
+	void LoadNormals(ifstream& inFile, Mesh& mesh);
 	void LoadIndices(ifstream& inFile, Mesh& mesh);
 
 	void LoadVertices(ifstream& inFile, Mesh& mesh)
@@ -22,15 +22,15 @@ namespace MeshLoader
 		}
 	}
 
-	void LoadColours(ifstream& inFile, Mesh& mesh)
+	void LoadNormals(ifstream& inFile, Mesh& mesh)
 	{
-		inFile >> mesh.ColorCount;
+		inFile >> mesh.NormalCount;
 
-		for (int i = 0; i < mesh.ColorCount; i++)
+		for (int i = 0; i < mesh.NormalCount; i++)
 		{
-			Color color;
-			inFile >> color.r >> color.g >> color.b;
-			mesh.Colors->push_back(color);
+			Vector3 vector;
+			inFile >> vector.x >> vector.y >> vector.z;
+			mesh.Normals->push_back(vector);
 		}
 	}
 
@@ -76,16 +76,16 @@ namespace MeshLoader
 
 		mesh->Vertices = new std::vector<Vertex>();
 		mesh->Indices = new std::vector<GLushort>();
-		mesh->Colors = new std::vector<Color>();
+		mesh->Normals = new std::vector<Vector3>();
 		mesh->TexCoords = new std::vector<TexCoord>();
 
 		LoadVertices(inFile, *mesh);
-		LoadColours(inFile, *mesh);
 		LoadTexCoords(inFile, *mesh);
+		LoadNormals(inFile, *mesh);
 		LoadIndices(inFile, *mesh);
 
 		mesh->Vertices->shrink_to_fit();
-		mesh->Colors->shrink_to_fit();
+		mesh->Normals->shrink_to_fit();
 		mesh->Indices->shrink_to_fit();
 		mesh->TexCoords->shrink_to_fit();
 
@@ -110,8 +110,7 @@ namespace MeshLoader
 
 		mesh->Vertices = new std::vector<Vertex>();
 		mesh->Indices = new std::vector<GLushort>();
-		mesh->Colors = new std::vector<Color>();
-		mesh->VertexCount, mesh->ColorCount, mesh->IndexCount = 1;
+		mesh->Normals = new std::vector<Vector3>();
 
 		char c;
 		while (inFile >> c)
@@ -132,14 +131,8 @@ namespace MeshLoader
 			}
 		}
 
-		for (int i = 0; i < mesh->Vertices->size(); i++)
-		{
-			Color color; color.r = ((double)rand()) / RAND_MAX; color.g = ((double)rand()) / RAND_MAX; color.b = ((double)rand()) / RAND_MAX;
-			mesh->Colors->push_back(color);
-		}
-
 		mesh->Vertices->shrink_to_fit();
-		mesh->Colors->shrink_to_fit();
+		mesh->Normals->shrink_to_fit();
 		mesh->Indices->shrink_to_fit();
 
 		return mesh;

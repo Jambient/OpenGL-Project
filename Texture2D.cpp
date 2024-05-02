@@ -176,16 +176,6 @@ ChunkData* readNextChunk(std::ifstream& inFile) {
     return chunkData;
 }
 
-/*ChunkData readUntilChunkType(ifstream& inFile, std::string type)
-{
-    ChunkData temp;
-    do {
-        temp = readNextChunk(inFile);
-    } while (temp.type != type);
-
-    return temp;
-}*/
-
 bool Texture2D::LoadPNG(char* path)
 {
     PNGFILEHEADER fileHeaderData;

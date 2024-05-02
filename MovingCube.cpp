@@ -12,16 +12,16 @@ MovingCube::~MovingCube()
 
 void MovingCube::Draw()
 {
-	if (_mesh->Vertices != nullptr && _mesh->Colors != nullptr && _mesh->Indices != nullptr && _mesh->TexCoords != nullptr)
+	if (_mesh->Vertices != nullptr && _mesh->Normals != nullptr && _mesh->Indices != nullptr && _mesh->TexCoords != nullptr)
 	{
 		glBindTexture(GL_TEXTURE_2D, _texture->GetID());
 
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 		glVertexPointer(3, GL_FLOAT, 0, _mesh->Vertices->data());
-		glColorPointer(3, GL_FLOAT, 0, _mesh->Colors->data());
+		glNormalPointer(GL_FLOAT, 0, _mesh->Normals->data());
 		glTexCoordPointer(2, GL_FLOAT, 0, _mesh->TexCoords->data());
 
 		glPushMatrix();
