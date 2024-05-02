@@ -29,6 +29,7 @@ public:
 	void Motion(int x, int y);
 
 	void InitObjects();
+	void InitLighting();
 	void InitGL(int argc, char* argv[]);
 
 	void DrawPolygon();
@@ -50,4 +51,7 @@ private:
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;
 	SceneObject* selectedObject;
+
+	glm::vec4* lightPosition;
+	Lighting* lightData;
 };

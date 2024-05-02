@@ -2,6 +2,8 @@
 #include <fstream>
 #include <vector>
 #include "Texture2D.h"
+#include <stdio.h>
+#include "inflatecpp/decompressor.h"
 
 using namespace std;
 
@@ -208,10 +210,29 @@ bool Texture2D::LoadPNG(char* path)
         cout << chunkData->length << " : " << chunkData->type << endl;
         if (chunkData->type == "IDAT")
         {
-            //textureData->insert(textureData->end(), chunkData->data.begin(), chunkData->data.end());
-            for (int i = 0; i < 20; i++) {
-                cout << "Byte " << i << ": 0x" << hex << (int)(unsigned char)chunkData->data[i] << endl << dec;
+            Decompressor data_decompressor = Decompressor();
+            unsigned int compressed_data_size = chunkData->length;
+            unsigned int max_decompressed_data_size = 200000000;
+            unsigned char* compressed_data = new unsigned char[compressed_data_size];
+            unsigned char* decompressed_data = new unsigned char[max_decompressed_data_size];
+
+            std::copy(chunkData->data.begin(), chunkData->data.end(), compressed_data);
+
+            unsigned int decompressed_data_size = data_decompressor.Feed(compressed_data, compressed_data_size, decompressed_data, max_decompressed_data_size, true);
+
+            if (decompressed_data_size == -1)
+            {
+                cout << "decompression error!" << endl;
+                delete[] compressed_data;
+                delete[] decompressed_data;
+
+                return false;
             }
+
+            cout << "decompressed " << decompressed_data_size << " bytes" << endl;
+
+            textureData->insert(textureData->end(), &decompressed_data[0], &decompressed_data[max_decompressed_data_size]);
+            //textureData->insert(textureData->end(), chunkData->data.begin(), chunkData->data.end());
         }
 
         chunkData = readNextChunk(inFile);

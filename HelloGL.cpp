@@ -15,6 +15,7 @@ HelloGL::HelloGL(int argc, char* argv[])
 {
 	InitGL(argc, argv);
 	InitObjects();
+	InitLighting();
 
 	glutMainLoop();
 }
@@ -45,6 +46,12 @@ void HelloGL::Display()
 
 void HelloGL::Update()
 {
+	// update lighting
+	glLightfv(GL_LIGHT0, GL_AMBIENT, &(lightData->Ambient.x));
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, &(lightData->Diffuse.x));
+	glLightfv(GL_LIGHT0, GL_SPECULAR, &(lightData->Specular.x));
+	glLightfv(GL_LIGHT0, GL_POSITION, &(lightPosition->x));
+
 	glLoadIdentity();
 	camera->Update(viewMatrix);
 
@@ -77,6 +84,11 @@ void HelloGL::Update()
 		camera->OffsetPosition(cameraUpVector);
 	if (InputManager::IsKeyDown('q'))
 		camera->OffsetPosition(-cameraUpVector);
+
+	/*Vector3 camPos = camera->GetPosition();
+	lightPosition->x = camPos.x;
+	lightPosition->y = camPos.y;
+	lightPosition->z = camPos.z;*/
 
 	glutPostRedisplay();
 }
@@ -255,10 +267,10 @@ void HelloGL::InitObjects()
 	texture2->LoadBMP((char*)"funnycat.bmp");
 
 	Texture2D* texture3 = new Texture2D();
-	texture3->LoadBMP((char*)"transparent-cat.bmp");
+	texture3->LoadBMP((char*)"transparent-cat.bmp");*/
 
 	Texture2D* texture4 = new Texture2D();
-	texture4->LoadPNG((char*)"new-cat.png");*/
+	texture4->LoadPNG((char*)"new-cat.png");
 
 	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
 	//Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");
@@ -289,6 +301,31 @@ void HelloGL::InitObjects()
 	scale = 0.0f;
 }
 
+void HelloGL::InitLighting()
+{
+	lightPosition = new glm::vec4();
+	lightPosition->x = 0.0f;
+	lightPosition->y = 0.0f;
+	lightPosition->z = 1.0f;
+	lightPosition->w = 0.0f;
+
+	lightData = new Lighting();
+	lightData->Ambient.x = 0.2f;
+	lightData->Ambient.y = 0.2f;
+	lightData->Ambient.z = 0.2f;
+	lightData->Ambient.w = 1.0f;
+
+	lightData->Diffuse.x = 0.8f;
+	lightData->Diffuse.y = 0.8f;
+	lightData->Diffuse.z = 0.8f;
+	lightData->Diffuse.w = 1.0f;
+
+	lightData->Specular.x = 0.2f;
+	lightData->Specular.y = 0.2f;
+	lightData->Specular.z = 0.2f;
+	lightData->Specular.w = 1.0f;
+}
+
 void HelloGL::InitGL(int argc, char* argv[])
 {
 
@@ -317,6 +354,8 @@ void HelloGL::InitGL(int argc, char* argv[])
 
 	glMatrixMode(GL_MODELVIEW);
 
+	//glEnable(GL_LIGHTING);
+	//glEnable(GL_LIGHT0);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
