@@ -270,7 +270,7 @@ void HelloGL::InitObjects()
 	texture3->LoadBMP((char*)"transparent-cat.bmp");*/
 
 	Texture2D* texture4 = new Texture2D();
-	texture4->LoadPNG((char*)"new-cat.png");
+	texture4->LoadPNG((char*)"small-test.png");
 
 	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
 	//Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");

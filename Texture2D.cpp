@@ -198,7 +198,7 @@ bool Texture2D::LoadPNG(char* path)
         return false;
     }
 
-    std::vector<char>* textureData = new std::vector<char>();
+    std::vector<char> textureData = std::vector<char>();
 
     chunkData = readNextChunk(inFile);
     cout << chunkData->length << " : " << chunkData->type << endl;
@@ -210,29 +210,9 @@ bool Texture2D::LoadPNG(char* path)
         cout << chunkData->length << " : " << chunkData->type << endl;
         if (chunkData->type == "IDAT")
         {
-            Decompressor data_decompressor = Decompressor();
-            unsigned int compressed_data_size = chunkData->length;
-            unsigned int max_decompressed_data_size = 200000000;
-            unsigned char* compressed_data = new unsigned char[compressed_data_size];
-            unsigned char* decompressed_data = new unsigned char[max_decompressed_data_size];
 
-            std::copy(chunkData->data.begin(), chunkData->data.end(), compressed_data);
-
-            unsigned int decompressed_data_size = data_decompressor.Feed(compressed_data, compressed_data_size, decompressed_data, max_decompressed_data_size, true);
-
-            if (decompressed_data_size == -1)
-            {
-                cout << "decompression error!" << endl;
-                delete[] compressed_data;
-                delete[] decompressed_data;
-
-                return false;
-            }
-
-            cout << "decompressed " << decompressed_data_size << " bytes" << endl;
-
-            textureData->insert(textureData->end(), &decompressed_data[0], &decompressed_data[max_decompressed_data_size]);
-            //textureData->insert(textureData->end(), chunkData->data.begin(), chunkData->data.end());
+            //textureData->insert(textureData->end(), &decompressed_data[0], &decompressed_data[decompressed_data_size]);
+            textureData.insert(textureData.end(), chunkData->data.begin(), chunkData->data.end());
         }
 
         chunkData = readNextChunk(inFile);
@@ -240,13 +220,40 @@ bool Texture2D::LoadPNG(char* path)
 
     inFile.close();
 
-    cout << "DATA: " << textureData->size() << endl;
+    Decompressor data_decompressor = Decompressor();
+    unsigned int compressed_data_size = textureData.size();
+    unsigned int max_decompressed_data_size = 300000000;
+    unsigned char* compressed_data = new unsigned char[compressed_data_size];
+    unsigned char* decompressed_data = new unsigned char[max_decompressed_data_size];
+
+    std::copy(textureData.begin(), textureData.end(), compressed_data);
+
+    unsigned int decompressed_data_size = data_decompressor.Feed(compressed_data, compressed_data_size, decompressed_data, max_decompressed_data_size, true);
+
+    if (decompressed_data_size == -1)
+    {
+        cout << "decompression error!" << endl;
+        delete[] compressed_data;
+        delete[] decompressed_data;
+
+        return false;
+    }
+
+    cout << "decompressed " << decompressed_data_size << " bytes" << endl;
+
+    std::vector<char>* uncompressedData = new std::vector<char>();
+    uncompressedData->insert(uncompressedData->end(), &decompressed_data[0], &decompressed_data[decompressed_data_size]);
+
     cout << infoHeaderData.width << " : " << infoHeaderData.height << endl;
     cout << (int)infoHeaderData.bitDepth << " : " << (int)infoHeaderData.colorType << endl;
 
-    /*glGenTextures(1, &_ID);
+    glGenTextures(1, &_ID);
     glBindTexture(GL_TEXTURE_2D, _ID);
-    gluBuild2DMipmaps(GL_TEXTURE_2D, 3, infoHeaderData.width, infoHeaderData.height, GL_RGB, GL_UNSIGNED_BYTE, textureData->data());*/
+    gluBuild2DMipmaps(GL_TEXTURE_2D, 4, infoHeaderData.width, infoHeaderData.height, GL_RGBA, GL_UNSIGNED_BYTE, uncompressedData->data());
+
+    delete[] compressed_data;
+    delete[] decompressed_data;
+    //delete[] uncompressedData;
 
     return true;
 }

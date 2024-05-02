@@ -23,6 +23,11 @@
     <ClInclude Include="Cube.h" />
     <ClInclude Include="GLUTCallbacks.h" />
     <ClInclude Include="HelloGL.h" />
+    <ClInclude Include="inflatecpp\adler32.h" />
+    <ClInclude Include="inflatecpp\bit_reader.h" />
+    <ClInclude Include="inflatecpp\crc32.h" />
+    <ClInclude Include="inflatecpp\decompressor.h" />
+    <ClInclude Include="inflatecpp\huffman_decoder.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Matrix3.h" />
     <ClInclude Include="MeshLoader.h" />
@@ -37,6 +42,11 @@
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="GLUTCallbacks.cpp" />
     <ClCompile Include="HelloGL.cpp" />
+    <ClCompile Include="inflatecpp\adler32.cc" />
+    <ClCompile Include="inflatecpp\bit_reader.cc" />
+    <ClCompile Include="inflatecpp\crc32.cc" />
+    <ClCompile Include="inflatecpp\decompressor.cc" />
+    <ClCompile Include="inflatecpp\huffman_decoder.cc" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="MeshLoader.cpp" />
     <ClCompile Include="MovingCube.cpp" />
