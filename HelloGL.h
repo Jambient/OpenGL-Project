@@ -34,8 +34,9 @@ public:
 	//void InitFont();
 	void InitGL(int argc, char* argv[]);
 
+	glm::vec3 GetRayFromScreenPosition(int x, int y);
 	void Raycast(int mouseX, int mouseY);
-	void DrawString(const char* text, glm::vec3* position, Color* color);
+	void RenderText(const char* text, const glm::ivec2& screenPosition, const Color& color = {1.0f, 1.0f, 1.0f});
 
 private:
 	float row1Rotation, row2Rotation, row3Rotation;

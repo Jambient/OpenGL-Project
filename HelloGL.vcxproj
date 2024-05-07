@@ -34,6 +34,7 @@
     <ClInclude Include="SceneObject.h" />
     <ClInclude Include="Structures.h" />
     <ClInclude Include="Texture2D.h" />
+    <ClInclude Include="TreeNode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
@@ -50,6 +51,7 @@
     <ClCompile Include="MovingCube.cpp" />
     <ClCompile Include="SceneObject.cpp" />
     <ClCompile Include="Texture2D.cpp" />
+    <ClCompile Include="TreeNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

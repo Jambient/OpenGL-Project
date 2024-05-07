@@ -11,6 +11,19 @@
 #define VIEWPORT_WIDTH 800
 #define VIEWPORT_HEIGHT 800
 
+// head
+//   torso
+//     left arm
+//       hand
+//         finger
+//         finger
+//         finger
+//     left leg
+//     right leg
+//     right arm
+
+
+
 HelloGL::HelloGL(int argc, char* argv[]) 
 {
 	InitGL(argc, argv);
@@ -41,15 +54,8 @@ void HelloGL::Display()
 		objects[i]->Draw();
 	}
 
-	glm::vec3 cameraForwardVector = camera->GetForwardVector();
-	glm::vec3 cameraRightVector = camera->GetRightVector();
-	glm::vec3 cameraUpVector = camera->GetUpVector();
-	glm::vec3 cameraPosition = camera->GetPosition();
-	std::cout << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << std::endl;
-	glm::vec3 v = { cameraPosition.x, cameraPosition.y, cameraPosition.z + 1 };
-	Color c = { 0.0f, 1.0f, 0.0f };
-
-	DrawString("Hello world!", &v, &c);
+	RenderText("Hello world!", glm::ivec2(row2Rotation, 30));
+	RenderText("Hello world!", glm::ivec2(row2Rotation - 30, 60));
 
 	glFlush();
 	glutSwapBuffers();
@@ -64,10 +70,9 @@ void HelloGL::Update()
 	glLightfv(GL_LIGHT0, GL_POSITION, &(lightPosition->x));
 
 	glLoadIdentity();
-	camera->Update(viewMatrix);
 
 	//row1Rotation = fmod(row1Rotation + 0.5f, 360.0f);
-	row2Rotation = fmod(row2Rotation + 1.5f, 360.0f);
+	row2Rotation = fmod(row2Rotation + 5.0f, VIEWPORT_WIDTH);
 	row3Rotation = fmod(row3Rotation - 0.5f, 360.0f);
 	scale = abs(sin(glutGet(GLUT_ELAPSED_TIME) / 500.0f)) / 1.5f + 0.2f;
 
@@ -101,14 +106,15 @@ void HelloGL::Update()
 	lightPosition->y = camPos.y;
 	lightPosition->z = camPos.z;*/
 
+	camera->Update(viewMatrix);
 	glutPostRedisplay();
 }
 
-void HelloGL::Raycast(int mouseX, int mouseY)
+glm::vec3 HelloGL::GetRayFromScreenPosition(int x, int y)
 {
 	// convert to 3d normalised device coordinates
-	float viewportX = (2.0f * mouseX) / VIEWPORT_WIDTH - 1.0f;
-	float viewportY = 1.0f - (2.0f * mouseY) / VIEWPORT_HEIGHT;
+	float viewportX = (2.0f * x) / VIEWPORT_WIDTH - 1.0f;
+	float viewportY = 1.0f - (2.0f * y) / VIEWPORT_HEIGHT;
 	glm::vec3 rayNDS(viewportX, viewportY, 1.0f);
 
 	// convert to 4d homogeneous clip coordinates
@@ -120,6 +126,13 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 
 	// convert to 4d world coordinates
 	glm::vec3 rayDirection = glm::normalize(glm::vec3(glm::inverse(viewMatrix) * rayEye));
+
+	return rayDirection;
+}
+
+void HelloGL::Raycast(int mouseX, int mouseY)
+{
+	glm::vec3 rayDirection = GetRayFromScreenPosition(mouseX, mouseY);
 	glm::vec3 rayOrigin = camera->GetPosition();
 
 	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
@@ -148,13 +161,17 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 	selectedObject = closestObject;
 }
 
-void HelloGL::DrawString(const char* text, glm::vec3* position, Color* color)
+void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, const Color& color)
 {
+	glm::vec3 cameraPosition = camera->GetPosition();
+	glm::vec3 rayDirection = GetRayFromScreenPosition(screenPosition.x, screenPosition.y);
+	glm::vec3 worldPosition = cameraPosition + rayDirection;
+
 	glPushMatrix();
-	glColor3f(color->r, color->g, color->b);
-	glTranslatef(position->x, position->y, position->z);
+	glColor3f(color.r, color.g, color.b);
+	glTranslatef(worldPosition.x, worldPosition.y, worldPosition.z);
 	glRasterPos2f(0.0f, 0.0f);
-	glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, (unsigned char*)text);
+	glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char*)text);
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glPopMatrix();
 }
