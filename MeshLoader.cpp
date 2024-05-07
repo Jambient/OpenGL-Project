@@ -28,7 +28,7 @@ namespace MeshLoader
 
 		for (int i = 0; i < mesh.NormalCount; i++)
 		{
-			Vector3 vector;
+			glm::vec3 vector;
 			inFile >> vector.x >> vector.y >> vector.z;
 			mesh.Normals->push_back(vector);
 		}
@@ -76,7 +76,7 @@ namespace MeshLoader
 
 		mesh->Vertices = new std::vector<Vertex>();
 		mesh->Indices = new std::vector<GLushort>();
-		mesh->Normals = new std::vector<Vector3>();
+		mesh->Normals = new std::vector<glm::vec3>();
 		mesh->TexCoords = new std::vector<TexCoord>();
 
 		LoadVertices(inFile, *mesh);
@@ -110,7 +110,7 @@ namespace MeshLoader
 
 		mesh->Vertices = new std::vector<Vertex>();
 		mesh->Indices = new std::vector<GLushort>();
-		mesh->Normals = new std::vector<Vector3>();
+		mesh->Normals = new std::vector<glm::vec3>();
 
 		char c;
 		while (inFile >> c)

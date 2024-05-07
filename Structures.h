@@ -3,7 +3,6 @@
 #include <gl/GL.h>
 #include <glm/glm.hpp>
 #include <vector>
-#include "Vector3.h"
 
 struct Color
 {
@@ -24,7 +23,7 @@ struct Mesh
 {
 	std::vector<Vertex>* Vertices;
 	std::vector<TexCoord>* TexCoords;
-	std::vector<Vector3>* Normals;
+	std::vector<glm::vec3>* Normals;
 	std::vector<GLushort>* Indices;
 	int VertexCount, TexCoordCount, NormalCount, IndexCount;
 };

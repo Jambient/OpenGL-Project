@@ -4,6 +4,8 @@
 #include <gl/GLU.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+//#include "ft2build.h"
+//#include FT_FREETYPE_H
 #include "GL/freeglut.h"
 #include "GLUTCallbacks.h"
 #include <utility>
@@ -12,7 +14,6 @@
 #include "Cube.h"
 #include "Camera.h"
 
-#define vector2 std::pair<double, double>
 #define REFRESHRATE 16
 
 class HelloGL
@@ -30,12 +31,11 @@ public:
 
 	void InitObjects();
 	void InitLighting();
+	//void InitFont();
 	void InitGL(int argc, char* argv[]);
 
-	void DrawPolygon();
-	void DrawRegularPolygon(vector2 center, float rotation, float radius, bool filled = true, float sides = 64.0f);
-	void DrawTriangleFromAngles(float angle1, float angle2, float base, vector2 pos, float rotation);
 	void Raycast(int mouseX, int mouseY);
+	void DrawString(const char* text, glm::vec3* position, Color* color);
 
 private:
 	float row1Rotation, row2Rotation, row3Rotation;
@@ -45,8 +45,8 @@ private:
 	std::vector<SceneObject*> objects;
 
 	bool isRightClickDown;
-	Vector3 lastMousePosition;
-	Vector3 lockedMousePosition;
+	glm::vec3 lastMousePosition;
+	glm::vec3 lockedMousePosition;
 
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;
@@ -54,4 +54,7 @@ private:
 
 	glm::vec4* lightPosition;
 	Lighting* lightData;
+
+	//FT_Library library;
+	//FT_Face face;
 };

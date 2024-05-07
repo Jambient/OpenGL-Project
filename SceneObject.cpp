@@ -1,6 +1,6 @@
 #include "SceneObject.h"
 
-SceneObject::SceneObject(Mesh* mesh, Texture2D* texture, Vector3 position)
+SceneObject::SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position)
 {
 	_mesh = mesh;
 	_texture = texture;

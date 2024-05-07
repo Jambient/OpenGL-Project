@@ -16,6 +16,7 @@ HelloGL::HelloGL(int argc, char* argv[])
 	InitGL(argc, argv);
 	InitObjects();
 	InitLighting();
+	//InitFont();
 
 	glutMainLoop();
 }
@@ -39,6 +40,16 @@ void HelloGL::Display()
 	{
 		objects[i]->Draw();
 	}
+
+	glm::vec3 cameraForwardVector = camera->GetForwardVector();
+	glm::vec3 cameraRightVector = camera->GetRightVector();
+	glm::vec3 cameraUpVector = camera->GetUpVector();
+	glm::vec3 cameraPosition = camera->GetPosition();
+	std::cout << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << std::endl;
+	glm::vec3 v = { cameraPosition.x, cameraPosition.y, cameraPosition.z + 1 };
+	Color c = { 0.0f, 1.0f, 0.0f };
+
+	DrawString("Hello world!", &v, &c);
 
 	glFlush();
 	glutSwapBuffers();
@@ -68,9 +79,9 @@ void HelloGL::Update()
 		}
 	}
 
-	Vector3 cameraForwardVector = camera->GetForwardVector();
-	Vector3 cameraRightVector = camera->GetRightVector();
-	Vector3 cameraUpVector = camera->GetUpVector();
+	glm::vec3 cameraForwardVector = camera->GetForwardVector();
+	glm::vec3 cameraRightVector = camera->GetRightVector();
+	glm::vec3 cameraUpVector = camera->GetUpVector();
 
 	if (InputManager::IsKeyDown('w'))
 		camera->OffsetPosition(cameraForwardVector);
@@ -85,84 +96,12 @@ void HelloGL::Update()
 	if (InputManager::IsKeyDown('q'))
 		camera->OffsetPosition(-cameraUpVector);
 
-	/*Vector3 camPos = camera->GetPosition();
+	/*glm::vec3 camPos = camera->GetPosition();
 	lightPosition->x = camPos.x;
 	lightPosition->y = camPos.y;
 	lightPosition->z = camPos.z;*/
 
 	glutPostRedisplay();
-}
-
-void HelloGL::DrawPolygon()
-{
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	glPushMatrix();
-	glRotatef(0, 0, 0, -1.0f);
-	glBegin(GL_POLYGON);
-	{
-		glColor3f(1.0f, 0.0f, 0.0f);
-		glVertex2f(-0.75, 0.5);
-		glVertex2f(0.75, 0.5);
-		glColor3f(0.0f, 0.0f, 1.0f);
-		glVertex2f(0.75, -0.5);
-		glVertex2f(-0.75, -0.5);
-	}
-	glEnd();
-	glPopMatrix();
-}
-void HelloGL::DrawRegularPolygon(vector2 center, float rotation, float radius, bool filled, float sides)
-{
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	glPushMatrix();
-	glTranslatef(center.first, center.second, 0.0f);
-	glRotatef(rotation, 0, 0, -1.0f);
-	glScalef(scale, scale, 1);
-
-	glBegin(filled ? GL_TRIANGLE_FAN : GL_LINE_LOOP);
-	for (int i = 0; i < sides; i++) {
-		float angle = 6.2832 * i / sides;
-		float x = radius * cos(angle);
-		float y = radius * sin(angle);
-		glVertex2f(x, y);
-	}
-	glEnd();
-	glPopMatrix();
-}
-
-void HelloGL::DrawTriangleFromAngles(float angle1, float angle2, float base, vector2 pos, float rotation)
-{
-	if (angle1 + angle2 >= 180) {
-		std::cout << "Triangle with angles " << angle1 << " and " << angle2 << " is not possible.";
-		return;
-	}
-
-	float angle3 = 180 - angle1 - angle2;
-	float side1 = (base * sin(glm::radians(angle3))) / sin(glm::radians(angle2));
-
-	vector2 side1_direction = std::make_pair(cos(glm::radians(angle1)), sin(glm::radians(angle1)));
-
-	vector2 secondVertex = std::make_pair(side1_direction.first * side1, side1_direction.second * side1);
-	vector2 centroid = std::make_pair((secondVertex.first + base) / 3.0f, secondVertex.second / 3.0f);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	glPushMatrix();
-	glTranslatef(pos.first + centroid.first, pos.second + centroid.second, 0.0f);
-	glRotatef(rotation, 0, 0, -1.0f);
-	glTranslatef(-centroid.first, -centroid.second, 0.0f);
-	glBegin(GL_POLYGON);
-	{
-		glVertex2f(0.0f, 0.0f);
-		glVertex2f(secondVertex.first, secondVertex.second);
-		glVertex2f(base, 0.0f);
-	}
-	glEnd();
-	glPopMatrix();
 }
 
 void HelloGL::Raycast(int mouseX, int mouseY)
@@ -181,7 +120,7 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 
 	// convert to 4d world coordinates
 	glm::vec3 rayDirection = glm::normalize(glm::vec3(glm::inverse(viewMatrix) * rayEye));
-	Vector3 rayOrigin = camera->GetPosition();
+	glm::vec3 rayOrigin = camera->GetPosition();
 
 	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
 	Texture2D* texture3 = new Texture2D();
@@ -191,7 +130,7 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 	SceneObject* closestObject = nullptr;
 
 	for (SceneObject* obj : objects) {
-		Vector3 offset = obj->GetPosition() - rayOrigin;
+		glm::vec3 offset = obj->GetPosition() - rayOrigin;
 		float distanceAlongRay = glm::dot(glm::vec3(offset.x, offset.y, offset.z), rayDirection);
 
 		if (distanceAlongRay < 0) continue;
@@ -207,6 +146,17 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 	}
 
 	selectedObject = closestObject;
+}
+
+void HelloGL::DrawString(const char* text, glm::vec3* position, Color* color)
+{
+	glPushMatrix();
+	glColor3f(color->r, color->g, color->b);
+	glTranslatef(position->x, position->y, position->z);
+	glRasterPos2f(0.0f, 0.0f);
+	glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, (unsigned char*)text);
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glPopMatrix();
 }
 
 void HelloGL::KeyboardDown(unsigned char key, int x, int y)
@@ -246,10 +196,10 @@ void HelloGL::Motion(int x, int y)
 {
 	if (isRightClickDown)
 	{
-		Vector3 currentMousePosition = Vector3(x + glutGet(GLUT_WINDOW_X), y + glutGet(GLUT_WINDOW_Y), 0);
-		Vector3 mouseOffset = currentMousePosition - lockedMousePosition;
+		glm::vec3 currentMousePosition = glm::vec3(x + glutGet(GLUT_WINDOW_X), y + glutGet(GLUT_WINDOW_Y), 0);
+		glm::vec3 mouseOffset = currentMousePosition - lockedMousePosition;
 
-		camera->OffsetRotation(Vector3(-mouseOffset.y, mouseOffset.x) * 0.01f);
+		camera->OffsetRotation(glm::vec3(-mouseOffset.y, mouseOffset.x, 0.0f) * 0.01f);
 
 		SetCursorPos(lockedMousePosition.x, lockedMousePosition.y);
 	}
@@ -257,7 +207,8 @@ void HelloGL::Motion(int x, int y)
 
 void HelloGL::InitObjects()
 {
-	camera = new Camera(Vector3(5.0f, 5.0f, -170.f), Vector3(0.0f, 0.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f));
+	camera = new Camera(glm::vec3(5.0f, 5.0f, -170.f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	//camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	Texture2D* texture = new Texture2D();
 	texture->LoadRAW((char*)"penguins.raw", 512, 512);
@@ -325,6 +276,69 @@ void HelloGL::InitLighting()
 	lightData->Specular.z = 0.2f;
 	lightData->Specular.w = 1.0f;
 }
+
+//void HelloGL::InitFont()
+//{
+//	// initialise the free type library
+//	if (FT_Init_FreeType(&library))
+//	{
+//		std::cerr << "An error occured during library initialisation";
+//	}
+//
+//	// load the font face
+//	if (FT_New_Face(library, "arial.ttf", 0, &face))
+//	{
+//		std::cerr << "The font file could not be loaded";
+//	}
+//
+//	// set font size
+//	FT_Set_Pixel_Sizes(face, 0, 48);
+//
+//	// set up OpenGL texture
+//	GLuint texture;
+//	glGenTextures(1, &texture);
+//	glBindTexture(GL_TEXTURE_2D, texture);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP); // maybe use GL_CLAMP_TO_EDGE
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//
+//	const char* text = "Hello, World!";
+//
+//	// Render text
+//	for (const char* c = text; *c; ++c) {
+//		if (FT_Load_Char(face, *c, FT_LOAD_RENDER))
+//			continue;
+//
+//		// Upload glyph to texture
+//		glTexImage2D(GL_TEXTURE_2D,
+//			0,
+//			GL_RED,
+//			face->glyph->bitmap.width,
+//			face->glyph->bitmap.rows,
+//			0,
+//			GL_RED,
+//			GL_UNSIGNED_BYTE,
+//			face->glyph->bitmap.buffer);
+//
+//		// Render quad
+//		float x = 100; // Calculate position
+//		float y = 100;
+//		float w = face->glyph->bitmap.width;
+//		float h = face->glyph->bitmap.rows;
+//
+//		glBegin(GL_QUADS);
+//		glTexCoord2f(0, 0); glVertex2f(x, y);
+//		glTexCoord2f(0, 1); glVertex2f(x, y + h);
+//		glTexCoord2f(1, 1); glVertex2f(x + w, y + h);
+//		glTexCoord2f(1, 0); glVertex2f(x + w, y);
+//		glEnd();
+//
+//		// Move pen position for next glyph
+//		x += face->glyph->advance.x >> 6;
+//		y += face->glyph->advance.y >> 6;
+//	}
+//}
 
 void HelloGL::InitGL(int argc, char* argv[])
 {

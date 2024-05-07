@@ -12,7 +12,7 @@ class Cube : public SceneObject
 {
 private:
 	GLfloat _rotation;
-	Vector3 _position;
+	glm::vec3 _position;
 	Material* _material;
 
 public:

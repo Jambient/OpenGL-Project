@@ -13,25 +13,25 @@
 class Camera
 {
 private:
-	Vector3 position;
-	Vector3 lookVector;
-	Vector3 upVector;
-	Vector3 rotation;
+	glm::vec3 position;
+	glm::vec3 lookVector;
+	glm::vec3 upVector;
+	glm::vec3 rotation;
 
-	Vector3 GetRotatedVector(Vector3 vector);
+	glm::vec3 GetRotatedVector(glm::vec3 vector);
 public:
-	Camera(Vector3 _position, Vector3 _lookVector, Vector3 _up);
+	Camera(glm::vec3 _position, glm::vec3 _lookVector, glm::vec3 _up);
 
-	Vector3 GetPosition() { return position; }
-	Vector3 GetForwardVector() { return GetRotatedVector(lookVector); }
-	Vector3 GetUpVector() { return GetRotatedVector(upVector); }
-	Vector3 GetRightVector();
+	glm::vec3 GetPosition() { return position; }
+	glm::vec3 GetForwardVector() { return GetRotatedVector(lookVector); }
+	glm::vec3 GetUpVector() { return GetRotatedVector(upVector); }
+	glm::vec3 GetRightVector();
 
-	void SetPosition(Vector3 _position) { position = _position; }
-	void OffsetPosition(Vector3 _offset) { position += _offset; }
+	void SetPosition(glm::vec3 _position) { position = _position; }
+	void OffsetPosition(glm::vec3 _offset) { position += _offset; }
 
-	void SetRotation(Vector3 _rotation) { rotation = _rotation; }
-	void OffsetRotation(Vector3 _offset) { rotation += _offset; rotation.x = std::min(std::max(rotation.x, -89.0f), 89.0f); }
+	void SetRotation(glm::vec3 _rotation) { rotation = _rotation; }
+	void OffsetRotation(glm::vec3 _offset) { rotation += _offset; rotation.x = std::min(std::max(rotation.x, -89.0f), 89.0f); }
 
 	void Update(glm::mat4& viewMatrix);
 };

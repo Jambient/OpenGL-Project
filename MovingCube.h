@@ -10,11 +10,11 @@
 class MovingCube : public SceneObject
 {
 private:
-	Vector3 _position;
-	Vector3 _velocity;
+	glm::vec3 _position;
+	glm::vec3 _velocity;
 
 public:
-	MovingCube(Mesh* mesh, Texture2D* texture, Vector3 initialPosition, Vector3 velocity);
+	MovingCube(Mesh* mesh, Texture2D* texture, glm::vec3 initialPosition, glm::vec3 velocity);
 	~MovingCube();
 
 	void Draw();
