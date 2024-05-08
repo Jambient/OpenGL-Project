@@ -31,10 +31,10 @@
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="MeshLoader.h" />
     <ClInclude Include="MovingCube.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneObject.h" />
     <ClInclude Include="Structures.h" />
     <ClInclude Include="Texture2D.h" />
-    <ClInclude Include="TreeNode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
@@ -49,9 +49,9 @@
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="MeshLoader.cpp" />
     <ClCompile Include="MovingCube.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneObject.cpp" />
     <ClCompile Include="Texture2D.cpp" />
-    <ClCompile Include="TreeNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -169,11 +169,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\glm.1.0.1\build\native\glm.targets" Condition="Exists('packages\glm.1.0.1\build\native\glm.targets')" />
+    <Import Project="packages\pugixml.1.14.0\build\native\pugixml.targets" Condition="Exists('packages\pugixml.1.14.0\build\native\pugixml.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('packages\glm.1.0.1\build\native\glm.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glm.1.0.1\build\native\glm.targets'))" />
+    <Error Condition="!Exists('packages\pugixml.1.14.0\build\native\pugixml.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\pugixml.1.14.0\build\native\pugixml.targets'))" />
   </Target>
 </Project>

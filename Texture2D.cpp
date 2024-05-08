@@ -13,7 +13,7 @@ Texture2D::~Texture2D()
 	glDeleteTextures(1, &_ID);
 }
 
-bool Texture2D::LoadRAW(char* path, int width, int height)
+bool Texture2D::LoadRAW(const char* path, int width, int height)
 {
 	char* tempTextureData; int fileSize; ifstream inFile;
 	_width = width; _height = height;
@@ -43,7 +43,7 @@ bool Texture2D::LoadRAW(char* path, int width, int height)
 	return true;
 }
 
-bool Texture2D::LoadTGA(char* path)
+bool Texture2D::LoadTGA(const char* path)
 {
     char* tempHeaderData = new char[18]; //18 Bytes is TGA Header Size
     char* tempTextureData;
@@ -105,7 +105,7 @@ bool Texture2D::LoadTGA(char* path)
     return true;
 }
 
-bool Texture2D::LoadBMP(char* path)
+bool Texture2D::LoadBMP(const char* path)
 {
     BITMAPFILEHEADER fileHeaderData;
     BITMAPINFOHEADER infoHeaderData;
@@ -177,7 +177,7 @@ ChunkData* readNextChunk(std::ifstream& inFile) {
     return chunkData;
 }
 
-bool Texture2D::LoadPNG(char* path)
+bool Texture2D::LoadPNG(const char* path)
 {
     PNGFILEHEADER fileHeaderData;
     PNGINFOHEADER infoHeaderData;

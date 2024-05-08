@@ -3,6 +3,5 @@
 
 namespace MeshLoader
 {
-	Mesh* LoadTXT(char* path);
-	Mesh* LoadOBJ(char* path);
+	Mesh* Load(const char* path);
 };

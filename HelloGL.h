@@ -1,9 +1,11 @@
 #pragma once
+#define GLM_ENABLE_EXPERIMENTAL
 #include <Windows.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/intersect.hpp>
 //#include "ft2build.h"
 //#include FT_FREETYPE_H
 #include "GL/freeglut.h"
@@ -13,6 +15,7 @@
 #include "Structures.h"
 #include "Cube.h"
 #include "Camera.h"
+#include "Scene.h"
 
 #define REFRESHRATE 16
 
@@ -55,6 +58,8 @@ private:
 
 	glm::vec4* lightPosition;
 	Lighting* lightData;
+
+	Scene* currentScene;
 
 	//FT_Library library;
 	//FT_Face face;

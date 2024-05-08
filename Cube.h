@@ -10,22 +10,16 @@
 
 class Cube : public SceneObject
 {
-private:
-	GLfloat _rotation;
-	glm::vec3 _position;
-	Material* _material;
-
 public:
-	Cube(Mesh* mesh, Texture2D* texture, float x, float y, float z, float rotation = 0.0f);
-	~Cube();
+	Cube(Mesh* mesh, Texture2D* texture, glm::vec3 position, float rotation = 0.0f);
 
-	void Draw();
 	void Update();
 
 	float SignedDistanceField(const glm::vec3& point) {
-		float _size = 2.0f;
-		glm::vec3 p = glm::abs(point - glm::vec3(_position.x, _position.y, _position.z)) - glm::vec3(_size / 2.0f);
+		/*float _size = 2.0f;
+		glm::vec3 p = glm::abs(point - _position) - glm::vec3(_size / 2.0f);
 		float maxDistance = glm::max(glm::max(p.x, p.y), p.z);
-		return glm::min(maxDistance, 0.0f) + glm::length(glm::max(p, glm::vec3(0.0f)));
+		return glm::min(maxDistance, 0.0f) + glm::length(glm::max(p, glm::vec3(0.0f)));*/
+		return 1.0f;
 	}
 };

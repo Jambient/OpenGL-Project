@@ -1,0 +1,47 @@
+<scene>
+	<objects>
+		<cube name="Baseplate">
+			<properties>
+				<transform>
+					<position x="0" y="0" z="0" />
+					<scale x="10" y="0.5" z="10" />
+				</transform>
+				<texture path="Textures/ground.bmp" />
+			</properties>
+			<obj name="Suzanne" path="Models/monkey.obj">
+				<properties>
+					<transform>
+						<position x="0" y="10" z="0" />
+					</transform>
+				</properties>
+			</obj>
+			<obj name="Box" path="Models/box.obj">
+				<properties>
+					<transform>
+						<position x="0" y="1.5" z="0" />
+						<scale x="2" y="2" z="2" />
+					</transform>
+					<texture path="Textures/box-texture.bmp" />
+				</properties>
+			</obj>
+			<obj name="Box" path="Models/box.obj">
+				<properties>
+					<transform>
+						<position x="4" y="1.5" z="0" />
+						<scale x="2" y="2" z="2" />
+					</transform>
+					<texture path="Textures/box-texture.bmp" />
+				</properties>
+			</obj>
+			<obj name="Box" path="Models/box.obj">
+				<properties>
+					<transform>
+						<position x="-4" y="1.5" z="0" />
+						<scale x="2" y="2" z="2" />
+					</transform>
+					<texture path="Textures/box-texture.bmp" />
+				</properties>
+			</obj>
+		</cube>
+	</objects>
+</scene>

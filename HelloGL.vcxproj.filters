@@ -60,7 +60,7 @@
     <ClInclude Include="inflatecpp\huffman_decoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TreeNode.h">
+    <ClInclude Include="Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -107,7 +107,7 @@
     <ClCompile Include="inflatecpp\huffman_decoder.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TreeNode.cpp">
+    <ClCompile Include="Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

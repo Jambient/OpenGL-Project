@@ -1,0 +1,42 @@
+<scene>
+	<objects>
+		<obj name="Church" path="Models/church.obj">
+			<properties>
+				<transform>
+					<position x="0" y="0" z="0" />
+				</transform>
+				<texture path="Textures/church-texture.bmp" />
+			</properties>
+		</obj>
+		<obj name="Palm Tree" path="Models/palm-tree.obj">
+			<properties>
+				<transform>
+					<position x="10" y="0" z="10" />
+				</transform>
+			</properties>
+		</obj>
+		<obj name="Palm Tree" path="Models/palm-tree.obj">
+			<properties>
+				<transform>
+					<position x="10" y="0" z="-10" />
+				</transform>
+			</properties>
+		</obj>
+		<obj name="Palm Tree" path="Models/palm-tree.obj">
+			<properties>
+				<transform>
+					<position x="15" y="0" z="-5" />
+				</transform>
+			</properties>
+		</obj>
+		<cube>
+			<properties>
+				<transform>
+					<position x="0" y="0" z="0" />
+					<scale x="30" y="1" z="30" />
+				</transform>
+				<texture path="Textures/sand.bmp" />
+			</properties>
+		</cube>
+	</objects>
+</scene>

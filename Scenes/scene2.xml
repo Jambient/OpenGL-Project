@@ -1,0 +1,11 @@
+<scene>
+	<objects>
+		<obj name="House" path="Models/house.obj">
+			<properties>
+				<transform>
+					<position x="0" y="0" z="0" />
+				</transform>
+			</properties>
+		</obj>
+	</objects>
+</scene>

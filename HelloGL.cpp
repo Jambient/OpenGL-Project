@@ -11,19 +11,6 @@
 #define VIEWPORT_WIDTH 800
 #define VIEWPORT_HEIGHT 800
 
-// head
-//   torso
-//     left arm
-//       hand
-//         finger
-//         finger
-//         finger
-//     left leg
-//     right leg
-//     right arm
-
-
-
 HelloGL::HelloGL(int argc, char* argv[]) 
 {
 	InitGL(argc, argv);
@@ -39,6 +26,9 @@ HelloGL::~HelloGL(void)
 	delete camera;
 	camera = nullptr;
 
+	delete currentScene;
+	currentScene = nullptr;
+
 	for (int i = 0; i < objects.size(); i++)
 	{
 		delete objects[i];
@@ -49,13 +39,20 @@ void HelloGL::Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for (int i = 0; i < objects.size(); i++)
-	{
-		objects[i]->Draw();
-	}
+	/*glPushMatrix();
+	glTranslatef(lightPosition->x, lightPosition->y, lightPosition->z);
+	glutSolidSphere(0.5, 20, 20);
+	glPopMatrix();*/
 
-	RenderText("Hello world!", glm::ivec2(row2Rotation, 30));
-	RenderText("Hello world!", glm::ivec2(row2Rotation - 30, 60));
+	int currentY = 30;
+	Color textColor = { 1.0f, 1.0f, 1.0f };
+	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth) {
+		RenderText(node->name.c_str(), glm::ivec2(20 + depth * 30, currentY), textColor);
+		currentY += 30;
+
+		if (node->object != nullptr)
+			node->object->Draw();
+	}, PRE_ORDER);
 
 	glFlush();
 	glutSwapBuffers();
@@ -67,7 +64,9 @@ void HelloGL::Update()
 	glLightfv(GL_LIGHT0, GL_AMBIENT, &(lightData->Ambient.x));
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, &(lightData->Diffuse.x));
 	glLightfv(GL_LIGHT0, GL_SPECULAR, &(lightData->Specular.x));
-	glLightfv(GL_LIGHT0, GL_POSITION, &(lightPosition->x));
+	//glLightfv(GL_LIGHT0, GL_POSITION, &(lightPosition->x));
+	GLfloat testPos[] = { lightPosition->x, lightPosition->y, lightPosition->z, lightPosition->w };
+	glLightfv(GL_LIGHT0, GL_POSITION, testPos);
 
 	glLoadIdentity();
 
@@ -135,10 +134,6 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 	glm::vec3 rayDirection = GetRayFromScreenPosition(mouseX, mouseY);
 	glm::vec3 rayOrigin = camera->GetPosition();
 
-	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
-	Texture2D* texture3 = new Texture2D();
-	texture3->LoadBMP((char*)"transparent-cat.bmp");
-
 	float closestIntersection = std::numeric_limits<float>::max();
 	SceneObject* closestObject = nullptr;
 
@@ -167,13 +162,16 @@ void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, con
 	glm::vec3 rayDirection = GetRayFromScreenPosition(screenPosition.x, screenPosition.y);
 	glm::vec3 worldPosition = cameraPosition + rayDirection;
 
-	glPushMatrix();
+	glDisable(GL_LIGHTING); // Disable lighting for text rendering
 	glColor3f(color.r, color.g, color.b);
+
+	glPushMatrix();
 	glTranslatef(worldPosition.x, worldPosition.y, worldPosition.z);
 	glRasterPos2f(0.0f, 0.0f);
 	glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char*)text);
-	glColor3f(1.0f, 1.0f, 1.0f);
 	glPopMatrix();
+
+	glEnable(GL_LIGHTING);
 }
 
 void HelloGL::KeyboardDown(unsigned char key, int x, int y)
@@ -224,32 +222,36 @@ void HelloGL::Motion(int x, int y)
 
 void HelloGL::InitObjects()
 {
+	currentScene = new Scene("Scenes/scene3.xml");
+
 	camera = new Camera(glm::vec3(5.0f, 5.0f, -170.f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glClearColor(0.25098f, 0.67058f, 0.93725f, 1.0);
+
 	//camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	Texture2D* texture = new Texture2D();
-	texture->LoadRAW((char*)"penguins.raw", 512, 512);
-	//texture->LoadTGA((char*)"cat.tga");
+	/*Texture2D* texture = new Texture2D();
+	texture->LoadRAW("penguins.raw", 512, 512);*/
+	//texture->LoadTGA("cat.tga");
 
 	/*Texture2D* texture2 = new Texture2D();
-	texture2->LoadBMP((char*)"funnycat.bmp");
+	texture2->LoadBMP("funnycat.bmp");
 
 	Texture2D* texture3 = new Texture2D();
-	texture3->LoadBMP((char*)"transparent-cat.bmp");*/
+	texture3->LoadBMP("transparent-cat.bmp");*/
 
-	Texture2D* texture4 = new Texture2D();
-	texture4->LoadPNG((char*)"small-test.png");
+	/*Texture2D* texture4 = new Texture2D();
+	texture4->LoadPNG("small-test.png");*/
 
-	Mesh* cubeMesh = MeshLoader::LoadTXT((char*)"cube.txt");
-	//Mesh* pyramidMesh = MeshLoader::LoadTXT((char*)"pyramid.txt");
-	/*Mesh* teapotMesh = MeshLoader::LoadOBJ((char*)"teapot.obj");
-	Mesh* cowMesh = MeshLoader::LoadOBJ((char*)"cow.obj");*/
+	//Mesh* cubeMesh = MeshLoader::Load("cube.txt");
+	//Mesh* pyramidMesh = MeshLoader::LoadTXT("pyramid.txt");
+	/*Mesh* teapotMesh = MeshLoader::LoadOBJ("teapot.obj");*/
+	//Mesh* cowMesh = MeshLoader::Load("cow.obj");
 
 	objects = std::vector<SceneObject*>();
-	for (int i = 0; i < 20; i++)
+	/*for (int i = 0; i < 20; i++)
 	{
-		objects.push_back(new Cube(cubeMesh, texture, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360));
-	}
+		objects.push_back(new Cube(cubeMesh, texture, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f));
+	}*/
 	/*for (int i = 0; i < objectCount / 4; i++)
 	{
 		objects[i] = new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
@@ -272,9 +274,9 @@ void HelloGL::InitObjects()
 void HelloGL::InitLighting()
 {
 	lightPosition = new glm::vec4();
-	lightPosition->x = 0.0f;
-	lightPosition->y = 0.0f;
-	lightPosition->z = 1.0f;
+	lightPosition->x = 5.0f;
+	lightPosition->y = 1.0f;
+	lightPosition->z = 5.0f;
 	lightPosition->w = 0.0f;
 
 	lightData = new Lighting();
@@ -283,14 +285,14 @@ void HelloGL::InitLighting()
 	lightData->Ambient.z = 0.2f;
 	lightData->Ambient.w = 1.0f;
 
-	lightData->Diffuse.x = 0.8f;
-	lightData->Diffuse.y = 0.8f;
-	lightData->Diffuse.z = 0.8f;
+	lightData->Diffuse.x = 1.0f;
+	lightData->Diffuse.y = 1.0f;
+	lightData->Diffuse.z = 1.0f;
 	lightData->Diffuse.w = 1.0f;
 
-	lightData->Specular.x = 0.2f;
-	lightData->Specular.y = 0.2f;
-	lightData->Specular.z = 0.2f;
+	lightData->Specular.x = 0.0f;
+	lightData->Specular.y = 0.0f;
+	lightData->Specular.z = 0.0f;
 	lightData->Specular.w = 1.0f;
 }
 
@@ -385,8 +387,8 @@ void HelloGL::InitGL(int argc, char* argv[])
 
 	glMatrixMode(GL_MODELVIEW);
 
-	//glEnable(GL_LIGHTING);
-	//glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
