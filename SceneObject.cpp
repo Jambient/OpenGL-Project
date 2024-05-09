@@ -5,13 +5,29 @@ glm::vec3 vertexToVector(Vertex vertex)
 	return glm::vec3(vertex.x, vertex.y, vertex.z);
 }
 
+void SceneObject::UpdateBoundingBox()
+{
+	_bbox.bounds[0], _bbox.bounds[1] = vertexToVector((*_mesh->Vertices)[0]);
+
+	for (const Vertex& vertex : *_mesh->Vertices)
+	{
+		_bbox.bounds[0] = glm::min(_bbox.bounds[0], vertexToVector(vertex));
+		_bbox.bounds[1] = glm::max(_bbox.bounds[1], vertexToVector(vertex));
+	}
+
+	//_bbox.bounds[0] = (_bbox.bounds[0] + _position) * _scale;
+	//_bbox.bounds[1] = (_bbox.bounds[1] + _position) * _scale;
+	_bbox.bounds[0] = (_bbox.bounds[0] * _scale) + _position;
+	_bbox.bounds[1] = (_bbox.bounds[1] * _scale) + _position;
+}
+
 SceneObject::SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position)
 {
 	_mesh = mesh;
 	_texture = texture;
 	_position = position;
 	_rotation = glm::vec3();
-	_scale = glm::vec3();
+	_scale = glm::vec3(1, 1, 1);
 
 	_material = new Material();
 	_material->Ambient.x = 1.0f; _material->Ambient.y = 1.0f; _material->Ambient.z = 1.0f;
@@ -22,16 +38,7 @@ SceneObject::SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position)
 	_material->Specular.w = 1.0f;
 	_material->Shininess = 250.0f;
 
-	// calculate bounding box
-	_bbox.minPoint, _bbox.maxPoint = vertexToVector((*_mesh->Vertices)[0]);
-
-	for (const Vertex& vertex : *_mesh->Vertices)
-	{
-		_bbox.minPoint = glm::min(_bbox.minPoint, vertexToVector(vertex));
-		_bbox.maxPoint = glm::max(_bbox.maxPoint, vertexToVector(vertex));
-	}
-
-	
+	UpdateBoundingBox();
 }
 
 SceneObject::~SceneObject(){}
@@ -42,7 +49,7 @@ void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, G
 	glDrawElements(mode, range_count, type, &((*indices)[start]));
 }
 
-void SceneObject::Draw()
+void SceneObject::Draw(bool drawBoundingBox)
 {
 	if (_mesh->Vertices != nullptr && _mesh->Normals != nullptr && _mesh->Indices != nullptr && _mesh->TexCoords != nullptr)
 	{
@@ -100,23 +107,28 @@ void SceneObject::Draw()
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	}
 
-	glDisable(GL_LIGHTING);
-	glPushMatrix();
-	double sizeX = _bbox.maxPoint.x - _bbox.minPoint.x;
-	double sizeY = _bbox.maxPoint.y - _bbox.minPoint.y;
-	double sizeZ = _bbox.maxPoint.z - _bbox.minPoint.z;
+	if (drawBoundingBox)
+	{
+		glDisable(GL_LIGHTING);
+		glPushMatrix();
+		double sizeX = _bbox.bounds[1].x - _bbox.bounds[0].x;
+		double sizeY = _bbox.bounds[1].y - _bbox.bounds[0].y;
+		double sizeZ = _bbox.bounds[1].z - _bbox.bounds[0].z;
 
-	// Translate to the center of the bounding box
-	double centerX = (_bbox.minPoint.x + _bbox.maxPoint.x) / 2.0;
-	double centerY = (_bbox.minPoint.y + _bbox.maxPoint.y) / 2.0;
-	double centerZ = (_bbox.minPoint.z + _bbox.maxPoint.z) / 2.0;
+		// Translate to the center of the bounding box
+		double centerX = (_bbox.bounds[0].x + _bbox.bounds[1].x) / 2.0;
+		double centerY = (_bbox.bounds[0].y + _bbox.bounds[1].y) / 2.0;
+		double centerZ = (_bbox.bounds[0].z + _bbox.bounds[1].z) / 2.0;
 
-	glColor3f(0.0f, 0.0f, 1.0f);
-	glTranslatef(centerX, centerY, centerZ);
-	glScalef(sizeX, sizeY, sizeZ);
-	glutWireCube(1);
-	glPopMatrix();
-	glEnable(GL_LIGHTING);
+		glColor3f(0.0f, 0.0f, 1.0f);
+		glTranslatef(centerX, centerY, centerZ);
+		glScalef(sizeX, sizeY, sizeZ);
+		glutWireCube(1);
+		glPopMatrix();
+		glEnable(GL_LIGHTING);
+	}
 }
 
-float SceneObject::SignedDistanceField(const glm::vec3& point) { return 1.0f; };
+float SceneObject::SignedDistanceField(const glm::vec3& p) {
+	return 1.0f;
+};

@@ -47,4 +47,9 @@ namespace GLUTCallbacks
 	{
 		helloGL->Motion(x, y);
 	}
+
+	void SceneMenu(int item)
+	{
+		helloGL->SceneMenu(item);
+	}
 }

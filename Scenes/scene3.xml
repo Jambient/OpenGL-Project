@@ -29,7 +29,7 @@
 				</transform>
 			</properties>
 		</obj>
-		<cube>
+		<cube name="Baseplate">
 			<properties>
 				<transform>
 					<position x="0" y="0" z="0" />

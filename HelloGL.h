@@ -10,6 +10,7 @@
 #include "GLUTCallbacks.h"
 #include <utility>
 #include <vector>
+#include <string>
 #include "Structures.h"
 #include "Cube.h"
 #include "Camera.h"
@@ -39,6 +40,8 @@ public:
 	void Raycast(int mouseX, int mouseY);
 	void RenderText(const char* text, const glm::ivec2& screenPosition, const Color& color = {1.0f, 1.0f, 1.0f});
 
+	void SceneMenu(int item);
+
 private:
 	float row1Rotation, row2Rotation, row3Rotation;
 	float scale;
@@ -52,12 +55,13 @@ private:
 
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;
-	SceneObject* selectedObject;
+	TreeNode* selectedObject;
 
 	glm::vec4* lightPosition;
 	Lighting* lightData;
 
 	Scene* currentScene;
+	std::vector<Scene*> scenes;
 
 	//FT_Library library;
 	//FT_Face face;

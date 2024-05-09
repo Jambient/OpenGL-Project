@@ -39,19 +39,15 @@ void HelloGL::Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/*glPushMatrix();
-	glTranslatef(lightPosition->x, lightPosition->y, lightPosition->z);
-	glutSolidSphere(0.5, 20, 20);
-	glPopMatrix();*/
-
 	int currentY = 30;
 	Color textColor = { 1.0f, 1.0f, 1.0f };
+	Color highlightedColor = { 0.0f, 0.0f, 1.0f };
 	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth) {
-		RenderText(node->name.c_str(), glm::ivec2(20 + depth * 30, currentY), textColor);
+		RenderText(node->name.c_str(), glm::ivec2(20 + depth * 30, currentY), node == selectedObject ? highlightedColor : textColor);
 		currentY += 30;
 
 		if (node->object != nullptr)
-			node->object->Draw();
+			node->object->Draw(node == selectedObject);
 	}, PRE_ORDER);
 
 	glFlush();
@@ -75,13 +71,13 @@ void HelloGL::Update()
 	row3Rotation = fmod(row3Rotation - 0.5f, 360.0f);
 	scale = abs(sin(glutGet(GLUT_ELAPSED_TIME) / 500.0f)) / 1.5f + 0.2f;
 
-	for (int i = 0; i < objects.size(); i++)
+	/*for (int i = 0; i < objects.size(); i++)
 	{
 		if (objects[i] == selectedObject)
 		{
 			objects[i]->Update();
 		}
-	}
+	}*/
 
 	glm::vec3 cameraForwardVector = camera->GetForwardVector();
 	glm::vec3 cameraRightVector = camera->GetRightVector();
@@ -133,15 +129,32 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 {
 	glm::vec3 rayDirection = GetRayFromScreenPosition(mouseX, mouseY);
 	glm::vec3 rayOrigin = camera->GetPosition();
+	Ray ray = Ray(rayOrigin, rayDirection);
 
 	float closestIntersection = std::numeric_limits<float>::max();
-	SceneObject* closestObject = nullptr;
+	TreeNode* closestObject = nullptr;
 
-	for (SceneObject* obj : objects) {
-		glm::vec3 offset = obj->GetPosition() - rayOrigin;
+	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth) {
+		SceneObject* obj = node->object;
+		if (obj == nullptr) { return; }
+
+		float distance = glm::length(obj->GetPosition() - rayOrigin);
+		AABBox bbox = obj->GetBoundingBox();
+
+		float intersectionDistance;
+		if (bbox.intersect(ray, intersectionDistance))
+		{
+			if (intersectionDistance < closestIntersection)
+			{
+				closestIntersection = intersectionDistance;
+				closestObject = node;
+			}
+		}
+
+		/*glm::vec3 offset = obj->GetPosition() - rayOrigin;
 		float distanceAlongRay = glm::dot(glm::vec3(offset.x, offset.y, offset.z), rayDirection);
 
-		if (distanceAlongRay < 0) continue;
+		if (distanceAlongRay < 0) return;
 
 		glm::vec3 intersectionPoint = glm::vec3(rayOrigin.x, rayOrigin.y, rayOrigin.z) + rayDirection * distanceAlongRay;
 
@@ -150,8 +163,9 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 		if (intersectionDistance < 0 && distanceAlongRay < closestIntersection) {
 			closestIntersection = intersectionDistance;
 			closestObject = obj;
-		}
-	}
+		}*/
+
+	}, PRE_ORDER);
 
 	selectedObject = closestObject;
 }
@@ -172,6 +186,16 @@ void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, con
 	glPopMatrix();
 
 	glEnable(GL_LIGHTING);
+}
+
+void HelloGL::SceneMenu(int item)
+{
+	if (scenes[item] == nullptr)
+	{
+		std::string pathStr = ("Scenes/scene" + std::to_string((item + 1)) + ".xml");
+		scenes[item] = new Scene(pathStr.c_str());
+	}
+	currentScene = scenes[item];
 }
 
 void HelloGL::KeyboardDown(unsigned char key, int x, int y)
@@ -222,7 +246,9 @@ void HelloGL::Motion(int x, int y)
 
 void HelloGL::InitObjects()
 {
-	currentScene = new Scene("Scenes/scene2.xml");
+	scenes.resize(3);
+	scenes[0] = new Scene("Scenes/scene1.xml");
+	currentScene = scenes[0];
 
 	camera = new Camera(glm::vec3(5.0f, 5.0f, -170.f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glClearColor(0.25098f, 0.67058f, 0.93725f, 1.0);
@@ -374,6 +400,16 @@ void HelloGL::InitGL(int argc, char* argv[])
 	glutKeyboardUpFunc(GLUTCallbacks::KeyboardUp);
 	glutMouseFunc(GLUTCallbacks::Mouse);
 	glutMotionFunc(GLUTCallbacks::Motion);
+
+	glutCreateMenu(GLUTCallbacks::SceneMenu);
+
+	// Add menu items
+	glutAddMenuEntry("Scene 1", 0);
+	glutAddMenuEntry("Scene 2", 1);
+	glutAddMenuEntry("Scene 3", 2);
+
+	// Associate a mouse button with menu
+	glutAttachMenu(GLUT_MIDDLE_BUTTON);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
