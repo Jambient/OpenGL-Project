@@ -306,9 +306,9 @@ void HelloGL::InitLighting()
 	lightPosition->w = 0.0f;
 
 	lightData = new Lighting();
-	lightData->Ambient.x = 0.2f;
-	lightData->Ambient.y = 0.2f;
-	lightData->Ambient.z = 0.2f;
+	lightData->Ambient.x = 1.0f;
+	lightData->Ambient.y = 1.0f;
+	lightData->Ambient.z = 1.0f;
 	lightData->Ambient.w = 1.0f;
 
 	lightData->Diffuse.x = 1.0f;
@@ -316,9 +316,9 @@ void HelloGL::InitLighting()
 	lightData->Diffuse.z = 1.0f;
 	lightData->Diffuse.w = 1.0f;
 
-	lightData->Specular.x = 0.0f;
-	lightData->Specular.y = 0.0f;
-	lightData->Specular.z = 0.0f;
+	lightData->Specular.x = 0.3f;
+	lightData->Specular.y = 0.3f;
+	lightData->Specular.z = 0.3f;
 	lightData->Specular.w = 1.0f;
 }
 

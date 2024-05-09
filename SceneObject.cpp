@@ -81,8 +81,8 @@ void SceneObject::Draw(bool drawBoundingBox)
 			{
 				Material currentMat = _mesh->Materials[pair.second];
 				// NEED TO UNDERSTAND STAND WHY SWAPPING THESE AROUND WORKED
-				glMaterialfv(GL_FRONT, GL_AMBIENT, &(currentMat.Diffuse.x));
-				glMaterialfv(GL_FRONT, GL_DIFFUSE, &(currentMat.Ambient.x));
+				glMaterialfv(GL_FRONT, GL_AMBIENT, &(currentMat.Ambient.x));
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, &(currentMat.Diffuse.x));
 				glMaterialfv(GL_FRONT, GL_SPECULAR, &(currentMat.Specular.x));
 				glMaterialf(GL_FRONT, GL_SHININESS, currentMat.Shininess);
 
