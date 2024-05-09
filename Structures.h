@@ -53,3 +53,8 @@ struct Mesh
 	std::map<std::array<GLuint, 2>, std::string> MaterialUsage;
 	int VertexCount, TexCoordCount, NormalCount, IndexCount;
 };
+
+struct BoundingBox {
+	glm::vec3 minPoint;
+	glm::vec3 maxPoint;
+};

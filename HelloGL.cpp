@@ -222,7 +222,7 @@ void HelloGL::Motion(int x, int y)
 
 void HelloGL::InitObjects()
 {
-	currentScene = new Scene("Scenes/scene3.xml");
+	currentScene = new Scene("Scenes/scene2.xml");
 
 	camera = new Camera(glm::vec3(5.0f, 5.0f, -170.f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glClearColor(0.25098f, 0.67058f, 0.93725f, 1.0);

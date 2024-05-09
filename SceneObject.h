@@ -1,4 +1,9 @@
 #pragma once
+#define NOMINMAX
+#include <Windows.h>
+#include <gl/GL.h>
+#include <gl/GLU.h>
+#include "GL/freeglut.h"
 #include <glm/glm.hpp>
 #include "Structures.h"
 #include "Texture2D.h"
@@ -12,6 +17,7 @@ protected:
 	glm::vec3 _rotation;
 	glm::vec3 _scale;
 	Material* _material;
+	BoundingBox _bbox;
 public:
 	SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position);
 	virtual ~SceneObject();
