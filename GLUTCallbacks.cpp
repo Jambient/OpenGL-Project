@@ -25,6 +25,7 @@ namespace GLUTCallbacks
 		int updateTime = glutGet(GLUT_ELAPSED_TIME);
 		helloGL->Update();
 		updateTime = glutGet(GLUT_ELAPSED_TIME) - updateTime;
+		helloGL->UpdateFPS(1000 / (preferredRefresh - updateTime));
 		glutTimerFunc(preferredRefresh - updateTime, GLUTCallbacks::Timer, preferredRefresh);
 	}
 
@@ -36,6 +37,16 @@ namespace GLUTCallbacks
 	void KeyboardUp(unsigned char key, int x, int y)
 	{
 		helloGL->KeyboardUp(key, x, y);
+	}
+
+	void KeyboardSpecialDown(int key, int x, int y)
+	{
+		helloGL->KeyboardSpecialDown(key, x, y);
+	}
+
+	void KeyboardSpecialUp(int key, int x, int y)
+	{
+		helloGL->KeyboardSpecialUp(key, x, y);
 	}
 
 	void Mouse(int button, int state, int x, int y)

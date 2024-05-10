@@ -7,18 +7,17 @@ glm::vec3 vertexToVector(Vertex vertex)
 
 void SceneObject::UpdateBoundingBox()
 {
-	_bbox.bounds[0], _bbox.bounds[1] = vertexToVector((*_mesh->Vertices)[0]);
+	_bbox.bounds[0] = _bbox.bounds[1] = vertexToVector((*_mesh->Vertices)[0]) * _scale;
 
 	for (const Vertex& vertex : *_mesh->Vertices)
 	{
-		_bbox.bounds[0] = glm::min(_bbox.bounds[0], vertexToVector(vertex));
-		_bbox.bounds[1] = glm::max(_bbox.bounds[1], vertexToVector(vertex));
+		glm::vec3 scaledVertex = vertexToVector(vertex) * _scale;
+		_bbox.bounds[0] = glm::min(_bbox.bounds[0], scaledVertex);
+		_bbox.bounds[1] = glm::max(_bbox.bounds[1], scaledVertex);
 	}
 
-	//_bbox.bounds[0] = (_bbox.bounds[0] + _position) * _scale;
-	//_bbox.bounds[1] = (_bbox.bounds[1] + _position) * _scale;
-	_bbox.bounds[0] = (_bbox.bounds[0] * _scale) + _position;
-	_bbox.bounds[1] = (_bbox.bounds[1] * _scale) + _position;
+	_bbox.bounds[0] += _position;
+	_bbox.bounds[1] += _position;
 }
 
 SceneObject::SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position)
@@ -49,7 +48,7 @@ void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, G
 	glDrawElements(mode, range_count, type, &((*indices)[start]));
 }
 
-void SceneObject::Draw(bool drawBoundingBox)
+void SceneObject::Draw(bool drawBoundingBox, glm::vec3 positionOffset)
 {
 	if (_mesh->Vertices != nullptr && _mesh->Normals != nullptr && _mesh->Indices != nullptr && _mesh->TexCoords != nullptr)
 	{
@@ -69,7 +68,7 @@ void SceneObject::Draw(bool drawBoundingBox)
 			glTexCoordPointer(2, GL_FLOAT, 0, _mesh->TexCoords->data());
 
 		glPushMatrix();
-		glTranslatef(_position.x, _position.y, _position.z);
+		glTranslatef(_position.x + positionOffset.x, _position.y + positionOffset.y, _position.z + positionOffset.z);
 		glRotatef(_rotation.x, 1.0f, 0.0f, 0.0f);
 		glRotatef(_rotation.y, 0.0f, 1.0f, 0.0f);
 		glRotatef(_rotation.z, 0.0f, 0.0f, 1.0f);
@@ -81,8 +80,8 @@ void SceneObject::Draw(bool drawBoundingBox)
 			{
 				Material currentMat = _mesh->Materials[pair.second];
 				// NEED TO UNDERSTAND STAND WHY SWAPPING THESE AROUND WORKED
-				glMaterialfv(GL_FRONT, GL_AMBIENT, &(currentMat.Ambient.x));
-				glMaterialfv(GL_FRONT, GL_DIFFUSE, &(currentMat.Diffuse.x));
+				glMaterialfv(GL_FRONT, GL_AMBIENT, &(currentMat.Diffuse.x));
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, &(currentMat.Ambient.x));
 				glMaterialfv(GL_FRONT, GL_SPECULAR, &(currentMat.Specular.x));
 				glMaterialf(GL_FRONT, GL_SHININESS, currentMat.Shininess);
 
@@ -111,24 +110,14 @@ void SceneObject::Draw(bool drawBoundingBox)
 	{
 		glDisable(GL_LIGHTING);
 		glPushMatrix();
-		double sizeX = _bbox.bounds[1].x - _bbox.bounds[0].x;
-		double sizeY = _bbox.bounds[1].y - _bbox.bounds[0].y;
-		double sizeZ = _bbox.bounds[1].z - _bbox.bounds[0].z;
-
-		// Translate to the center of the bounding box
-		double centerX = (_bbox.bounds[0].x + _bbox.bounds[1].x) / 2.0;
-		double centerY = (_bbox.bounds[0].y + _bbox.bounds[1].y) / 2.0;
-		double centerZ = (_bbox.bounds[0].z + _bbox.bounds[1].z) / 2.0;
+		glm::vec3 size = (_bbox.bounds[1] - _bbox.bounds[0]);
+		glm::vec3 center = (_bbox.bounds[0] + _bbox.bounds[1]) / 2.0f + positionOffset;
 
 		glColor3f(0.0f, 0.0f, 1.0f);
-		glTranslatef(centerX, centerY, centerZ);
-		glScalef(sizeX, sizeY, sizeZ);
+		glTranslatef(center.x, center.y, center.z);
+		glScalef(size.x, size.y, size.z);
 		glutWireCube(1);
 		glPopMatrix();
 		glEnable(GL_LIGHTING);
 	}
 }
-
-float SceneObject::SignedDistanceField(const glm::vec3& p) {
-	return 1.0f;
-};

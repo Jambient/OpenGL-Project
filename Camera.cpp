@@ -3,13 +3,13 @@
 
 glm::vec3 Camera::GetRotatedVector(glm::vec3 vector)
 {
-	float yaw = glm::radians(rotation.y);
-	float pitch = glm::radians(rotation.x);
+	float pitch = glm::radians(m_rotation.x);
+	float yaw = glm::radians(m_rotation.y);
 
-	float cosYaw = cos(yaw);
-	float sinYaw = sin(yaw);
 	float cosPitch = cos(pitch);
 	float sinPitch = sin(pitch);
+	float cosYaw = cos(yaw);
+	float sinYaw = sin(yaw);
 
 	glm::mat3 rotationXMat = glm::mat3(
 		1.0f, 0.0f, 0.0f,
@@ -26,25 +26,33 @@ glm::vec3 Camera::GetRotatedVector(glm::vec3 vector)
 	return rotationYMat * (rotationXMat * vector);
 }
 
-Camera::Camera(glm::vec3 _position, glm::vec3 _lookVector, glm::vec3 _upVector)
+Camera::Camera(glm::vec3 position, glm::vec3 rotation)
 {
-	position = _position;
-	lookVector = _lookVector;
-	upVector = _upVector;
-	rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+	m_position = position;
+	m_rotation = rotation;
 }
 
 glm::vec3 Camera::GetRightVector()
 {
-	return glm::cross(GetRotatedVector(lookVector), GetRotatedVector(upVector));
+	return glm::cross(GetRotatedVector(glm::vec3(0.0f, 0.0f, 1.0f)), GetRotatedVector(glm::vec3(0.0f, 1.0f, 0.0f)));
 }
 
 void Camera::Update(glm::mat4& viewMatrix)
 {
-	glm::vec3 newLookVector = glm::vec3(lookVector.x, lookVector.y, lookVector.z);
-	glm::vec3 newUpVector = GetRotatedVector(upVector);
+	glm::vec3 lookVector = GetRotatedVector(glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::vec3 upVector = GetRotatedVector(glm::vec3(0.0f, 1.0f, 0.0f));
 
-	glm::vec3 center = position + GetRotatedVector(newLookVector);
-	gluLookAt(position.x, position.y, position.z, center.x, center.y, center.z, upVector.x, upVector.y, upVector.z);
-	viewMatrix = glm::lookAt(glm::vec3(position.x, position.y, position.z), glm::vec3(center.x, center.y, center.z), glm::vec3(upVector.x, upVector.y, upVector.z));
+	switch (m_viewMode)
+	{
+	case ViewMode::FLY:
+		glm::vec3 center = m_position + lookVector;
+		gluLookAt(m_position.x, m_position.y, m_position.z, center.x, center.y, center.z, upVector.x, upVector.y, upVector.z);
+		viewMatrix = glm::lookAt(m_position, center, upVector);
+		break;
+	case ViewMode::ORBIT:
+		m_position = m_orbitTargetPosition - lookVector * m_orbitDistance;
+		gluLookAt(m_position.x, m_position.y, m_position.z, m_orbitTargetPosition.x, m_orbitTargetPosition.y, m_orbitTargetPosition.z, upVector.x, upVector.y, upVector.z);
+		viewMatrix = glm::lookAt(m_position, m_orbitTargetPosition, upVector);
+		break;
+	}
 }

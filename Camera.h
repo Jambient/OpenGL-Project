@@ -10,28 +10,41 @@
 #include "Structures.h"
 #include <algorithm>
 
+enum class ViewMode
+{
+	FLY,
+	ORBIT
+};
+
 class Camera
 {
 private:
-	glm::vec3 position;
-	glm::vec3 lookVector;
-	glm::vec3 upVector;
-	glm::vec3 rotation;
+	glm::vec3 m_position;
+	glm::vec3 m_rotation;
+
+	ViewMode m_viewMode = ViewMode::FLY;
+	glm::vec3 m_orbitTargetPosition = glm::vec3();
+	float m_orbitDistance = 10.0f;
 
 	glm::vec3 GetRotatedVector(glm::vec3 vector);
 public:
-	Camera(glm::vec3 _position, glm::vec3 _lookVector, glm::vec3 _up);
+	Camera(glm::vec3 position, glm::vec3 rotation);
 
-	glm::vec3 GetPosition() { return position; }
-	glm::vec3 GetForwardVector() { return GetRotatedVector(lookVector); }
-	glm::vec3 GetUpVector() { return GetRotatedVector(upVector); }
+	glm::vec3 GetPosition() { return m_position; }
+	glm::vec3 GetForwardVector() { return GetRotatedVector(glm::vec3(0.0f, 0.0f, 1.0f)); }
+	glm::vec3 GetUpVector() { return GetRotatedVector(glm::vec3(0.0f, 1.0f, 0.0f)); }
 	glm::vec3 GetRightVector();
 
-	void SetPosition(glm::vec3 _position) { position = _position; }
-	void OffsetPosition(glm::vec3 _offset) { position += _offset; }
+	ViewMode GetViewMode() const { return m_viewMode; }
+	void SetViewMode(ViewMode mode) { m_viewMode = mode; };
+	void SetOrbitTargetPosition(glm::vec3 target) { m_orbitTargetPosition = target; }
+	void SetOrbitDistance(float distance) { m_orbitDistance = distance; }
 
-	void SetRotation(glm::vec3 _rotation) { rotation = _rotation; }
-	void OffsetRotation(glm::vec3 _offset) { rotation += _offset; rotation.x = std::min(std::max(rotation.x, -89.0f), 89.0f); }
+	void SetPosition(glm::vec3 position) { m_position = position; }
+	void OffsetPosition(glm::vec3 offset) { m_position += offset; }
+
+	void SetRotation(glm::vec3 rotation) { m_rotation = rotation; }
+	void OffsetRotation(glm::vec3 offset) { m_rotation += offset; m_rotation.x = std::min(std::max(m_rotation.x, -89.0f), 89.0f); }
 
 	void Update(glm::mat4& viewMatrix);
 };

@@ -8,9 +8,9 @@
 #include <functional>
 
 enum TraversalType {
-	PRE_ORDER,
-	IN_ORDER,
-	POST_ORDER
+	PRE_ORDER = 1,
+	IN_ORDER = 2,
+	POST_ORDER = 4
 };
 
 struct TreeNode
@@ -27,13 +27,18 @@ public:
 	Scene(const char* filePath);
 	~Scene();
 
-	void IterateTree(TreeNode* node, int currentDepth, std::function<void(TreeNode*, int)> onNodeCallback, TraversalType traversalType);
+	void IterateTree(TreeNode* node, int currentDepth, std::function<void(TreeNode*, int, TraversalType)> onNodeCallback, TraversalType traversalType);
 
-	TreeNode* GetRoot() const { return treeRoot; }
+	TreeNode* GetRoot() const { return m_treeRoot; }
+	glm::vec3 GetCameraPosition() const { return m_cameraPosition; }
+	glm::vec3 GetCameraRotation() const { return m_cameraRotation; }
+
 private:
-	TreeNode* treeRoot;
+	TreeNode* m_treeRoot;
+	glm::vec3 m_cameraPosition = glm::vec3();
+	glm::vec3 m_cameraRotation = glm::vec3();
 
 	void BuildSceneTreeRecursively(TreeNode* parentNode, pugi::xml_node xmlNode);
-
+	glm::vec3 GetVectorFromNode(pugi::xml_node node, glm::vec3 defaultValue);
 };
 

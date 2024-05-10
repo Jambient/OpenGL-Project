@@ -1,34 +1,9 @@
 <scene>
+	<camera>
+		<position x="35" y="5" z="0" />
+		<rotation x="0" y="90" z="0" />
+	</camera>
 	<objects>
-		<obj name="Church" path="Models/church.obj">
-			<properties>
-				<transform>
-					<position x="0" y="0" z="0" />
-				</transform>
-				<texture path="Textures/church-texture.bmp" />
-			</properties>
-		</obj>
-		<obj name="Palm Tree" path="Models/palm-tree.obj">
-			<properties>
-				<transform>
-					<position x="10" y="0" z="10" />
-				</transform>
-			</properties>
-		</obj>
-		<obj name="Palm Tree" path="Models/palm-tree.obj">
-			<properties>
-				<transform>
-					<position x="10" y="0" z="-10" />
-				</transform>
-			</properties>
-		</obj>
-		<obj name="Palm Tree" path="Models/palm-tree.obj">
-			<properties>
-				<transform>
-					<position x="15" y="0" z="-5" />
-				</transform>
-			</properties>
-		</obj>
 		<cube name="Baseplate">
 			<properties>
 				<transform>
@@ -37,6 +12,35 @@
 				</transform>
 				<texture path="Textures/sand.bmp" />
 			</properties>
+			<obj name="Church" path="Models/church.obj">
+				<properties>
+					<transform>
+						<position x="0" y="0" z="0" />
+					</transform>
+					<texture path="Textures/church-texture.bmp" />
+				</properties>
+			</obj>
+			<obj name="Palm Tree" path="Models/palm-tree.obj">
+				<properties>
+					<transform>
+						<position x="10" y="0" z="10" />
+					</transform>
+				</properties>
+			</obj>
+			<obj name="Palm Tree" path="Models/palm-tree.obj">
+				<properties>
+					<transform>
+						<position x="10" y="0" z="-10" />
+					</transform>
+				</properties>
+			</obj>
+			<obj name="Palm Tree" path="Models/palm-tree.obj">
+				<properties>
+					<transform>
+						<position x="15" y="0" z="-5" />
+					</transform>
+				</properties>
+			</obj>
 		</cube>
 	</objects>
 </scene>

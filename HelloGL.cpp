@@ -42,16 +42,69 @@ void HelloGL::Display()
 	int currentY = 30;
 	Color textColor = { 1.0f, 1.0f, 1.0f };
 	Color highlightedColor = { 0.0f, 0.0f, 1.0f };
-	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth) {
-		RenderText(node->name.c_str(), glm::ivec2(20 + depth * 30, currentY), node == selectedObject ? highlightedColor : textColor);
-		currentY += 30;
-
+	glm::vec3 positionOffset = glm::vec3();
+	glm::vec3 selectedObjectOffset = glm::vec3();
+	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth, TraversalType type) {
+		glm::vec3 objectPositionOffset = glm::vec3();
 		if (node->object != nullptr)
-			node->object->Draw(node == selectedObject);
-	}, PRE_ORDER);
+		{
+			objectPositionOffset = node->object->GetPosition();
+		}
+
+		if (type & PRE_ORDER)
+		{
+			RenderText(node->name.c_str(), glm::ivec2(20 + depth * 30, currentY), node == selectedObject ? highlightedColor : textColor);
+			currentY += 30;
+
+			if (node->object != nullptr)
+			{
+				if (node == selectedObject)
+				{
+					selectedObjectOffset = positionOffset;
+				}
+				node->object->Draw(node == selectedObject, positionOffset);
+				positionOffset += objectPositionOffset;
+			}
+		}
+		else if (type & IN_ORDER)
+		{
+			positionOffset -= objectPositionOffset;
+		}
+		}, TraversalType(PRE_ORDER | IN_ORDER));
+
+	RenderText(("FPS: " + std::to_string(fps)).c_str(), { VIEWPORT_WIDTH - 80, 30 });
+	std::string cameraModeText = "Camera Mode: ";
+	cameraModeText += (camera->GetViewMode() == ViewMode::FLY) ? "FLY" : "ORBIT";
+	RenderText(cameraModeText.c_str(), {VIEWPORT_WIDTH / 2 - 80, 30});
+
+	if (selectedObject != nullptr)
+	{
+		AABBox bbox = selectedObject->object->GetBoundingBox();
+		glm::vec3 center = (bbox.bounds[0] + bbox.bounds[1]) / 2.0f;
+		camera->SetOrbitTargetPosition(center + selectedObjectOffset);
+	}
 
 	glFlush();
 	glutSwapBuffers();
+}
+
+glm::vec3 HelloGL::GetClosestAxisAlignedVector(glm::vec3 vec)
+{
+	vec = glm::normalize(vec);
+	glm::vec3 closestVector;
+	float closestDotProduct = -1;
+
+	for (glm::vec3& aaV : axisAlignedVectors)
+	{
+		float dotProduct = glm::dot(vec, aaV);
+		if (dotProduct > closestDotProduct)
+		{
+			closestDotProduct = dotProduct;
+			closestVector = aaV;
+		}
+	}
+
+	return closestVector;
 }
 
 void HelloGL::Update()
@@ -96,10 +149,17 @@ void HelloGL::Update()
 	if (InputManager::IsKeyDown('q'))
 		camera->OffsetPosition(-cameraUpVector);
 
-	/*glm::vec3 camPos = camera->GetPosition();
-	lightPosition->x = camPos.x;
-	lightPosition->y = camPos.y;
-	lightPosition->z = camPos.z;*/
+	if (selectedObject != nullptr)
+	{
+		if (InputManager::IsSpecialKeyDown(GLUT_KEY_LEFT))
+			selectedObject->object->OffsetPosition(GetClosestAxisAlignedVector(-cameraRightVector) * 0.1f);
+		if (InputManager::IsSpecialKeyDown(GLUT_KEY_RIGHT))
+			selectedObject->object->OffsetPosition(GetClosestAxisAlignedVector(cameraRightVector) * 0.1f);
+		if (InputManager::IsSpecialKeyDown(GLUT_KEY_UP))
+			selectedObject->object->OffsetPosition(GetClosestAxisAlignedVector(cameraUpVector) * 0.1f);
+		if (InputManager::IsSpecialKeyDown(GLUT_KEY_DOWN))
+			selectedObject->object->OffsetPosition(GetClosestAxisAlignedVector(-cameraUpVector) * 0.1f);
+	}
 
 	camera->Update(viewMatrix);
 	glutPostRedisplay();
@@ -133,22 +193,33 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 
 	float closestIntersection = std::numeric_limits<float>::max();
 	TreeNode* closestObject = nullptr;
+	glm::vec3 positionOffset = glm::vec3();
 
-	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth) {
+	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth, TraversalType type) {
 		SceneObject* obj = node->object;
 		if (obj == nullptr) { return; }
+		glm::vec3 objectPositionOffset = node->object->GetPosition();
 
-		float distance = glm::length(obj->GetPosition() - rayOrigin);
-		AABBox bbox = obj->GetBoundingBox();
-
-		float intersectionDistance;
-		if (bbox.intersect(ray, intersectionDistance))
+		if (type & PRE_ORDER)
 		{
-			if (intersectionDistance < closestIntersection)
+			AABBox bbox = obj->GetBoundingBox();
+			bbox.bounds[0] += positionOffset;
+			bbox.bounds[1] += positionOffset;
+
+			float intersectionDistance;
+			if (bbox.intersect(ray, intersectionDistance))
 			{
-				closestIntersection = intersectionDistance;
-				closestObject = node;
+				if (intersectionDistance < closestIntersection)
+				{
+					closestIntersection = intersectionDistance;
+					closestObject = node;
+				}
 			}
+			positionOffset += objectPositionOffset;
+		}
+		else if (type & IN_ORDER)
+		{
+			positionOffset -= objectPositionOffset;
 		}
 
 		/*glm::vec3 offset = obj->GetPosition() - rayOrigin;
@@ -165,7 +236,17 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 			closestObject = obj;
 		}*/
 
-	}, PRE_ORDER);
+	}, TraversalType(PRE_ORDER | IN_ORDER));
+
+	if (closestObject == nullptr)
+		camera->SetViewMode(ViewMode::FLY);
+	else
+	{
+		AABBox bbox = closestObject->object->GetBoundingBox();
+		glm::vec3 size = (bbox.bounds[1] - bbox.bounds[0]);
+		float distance = glm::max(glm::max(size.x, size.y), size.z);
+		camera->SetOrbitDistance(distance * 3.0f);
+	}
 
 	selectedObject = closestObject;
 }
@@ -195,17 +276,35 @@ void HelloGL::SceneMenu(int item)
 		std::string pathStr = ("Scenes/scene" + std::to_string((item + 1)) + ".xml");
 		scenes[item] = new Scene(pathStr.c_str());
 	}
+	selectedObject = nullptr;
 	currentScene = scenes[item];
+
+	camera->SetViewMode(ViewMode::FLY);
+	camera->SetPosition(currentScene->GetCameraPosition());
+	camera->SetRotation(currentScene->GetCameraRotation());
 }
 
 void HelloGL::KeyboardDown(unsigned char key, int x, int y)
 {
 	InputManager::OnKeyboardDown(key);
+
+	if (key == 'f' && selectedObject != nullptr)
+		camera->SetViewMode(camera->GetViewMode() == ViewMode::FLY ? ViewMode::ORBIT : ViewMode::FLY);
 }
 
 void HelloGL::KeyboardUp(unsigned char key, int x, int y)
 {
 	InputManager::OnKeyboardUp(key);
+}
+
+void HelloGL::KeyboardSpecialDown(int key, int x, int y)
+{
+	InputManager::OnKeyboardSpecialDown(key);
+}
+
+void HelloGL::KeyboardSpecialUp(int key, int x, int y)
+{
+	InputManager::OnKeyboardSpecialUp(key);
 }
 
 void HelloGL::Mouse(int button, int state, int x, int y)
@@ -250,7 +349,7 @@ void HelloGL::InitObjects()
 	scenes[0] = new Scene("Scenes/scene1.xml");
 	currentScene = scenes[0];
 
-	camera = new Camera(glm::vec3(5.0f, 5.0f, -170.f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	camera = new Camera(currentScene->GetCameraPosition(), currentScene->GetCameraRotation());
 	glClearColor(0.25098f, 0.67058f, 0.93725f, 1.0);
 
 	//camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -306,9 +405,9 @@ void HelloGL::InitLighting()
 	lightPosition->w = 0.0f;
 
 	lightData = new Lighting();
-	lightData->Ambient.x = 1.0f;
-	lightData->Ambient.y = 1.0f;
-	lightData->Ambient.z = 1.0f;
+	lightData->Ambient.x = 0.2f;
+	lightData->Ambient.y = 0.2f;
+	lightData->Ambient.z = 0.2f;
 	lightData->Ambient.w = 1.0f;
 
 	lightData->Diffuse.x = 1.0f;
@@ -316,74 +415,11 @@ void HelloGL::InitLighting()
 	lightData->Diffuse.z = 1.0f;
 	lightData->Diffuse.w = 1.0f;
 
-	lightData->Specular.x = 0.3f;
-	lightData->Specular.y = 0.3f;
-	lightData->Specular.z = 0.3f;
+	lightData->Specular.x = 0.0f;
+	lightData->Specular.y = 0.0f;
+	lightData->Specular.z = 0.0f;
 	lightData->Specular.w = 1.0f;
 }
-
-//void HelloGL::InitFont()
-//{
-//	// initialise the free type library
-//	if (FT_Init_FreeType(&library))
-//	{
-//		std::cerr << "An error occured during library initialisation";
-//	}
-//
-//	// load the font face
-//	if (FT_New_Face(library, "arial.ttf", 0, &face))
-//	{
-//		std::cerr << "The font file could not be loaded";
-//	}
-//
-//	// set font size
-//	FT_Set_Pixel_Sizes(face, 0, 48);
-//
-//	// set up OpenGL texture
-//	GLuint texture;
-//	glGenTextures(1, &texture);
-//	glBindTexture(GL_TEXTURE_2D, texture);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP); // maybe use GL_CLAMP_TO_EDGE
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//
-//	const char* text = "Hello, World!";
-//
-//	// Render text
-//	for (const char* c = text; *c; ++c) {
-//		if (FT_Load_Char(face, *c, FT_LOAD_RENDER))
-//			continue;
-//
-//		// Upload glyph to texture
-//		glTexImage2D(GL_TEXTURE_2D,
-//			0,
-//			GL_RED,
-//			face->glyph->bitmap.width,
-//			face->glyph->bitmap.rows,
-//			0,
-//			GL_RED,
-//			GL_UNSIGNED_BYTE,
-//			face->glyph->bitmap.buffer);
-//
-//		// Render quad
-//		float x = 100; // Calculate position
-//		float y = 100;
-//		float w = face->glyph->bitmap.width;
-//		float h = face->glyph->bitmap.rows;
-//
-//		glBegin(GL_QUADS);
-//		glTexCoord2f(0, 0); glVertex2f(x, y);
-//		glTexCoord2f(0, 1); glVertex2f(x, y + h);
-//		glTexCoord2f(1, 1); glVertex2f(x + w, y + h);
-//		glTexCoord2f(1, 0); glVertex2f(x + w, y);
-//		glEnd();
-//
-//		// Move pen position for next glyph
-//		x += face->glyph->advance.x >> 6;
-//		y += face->glyph->advance.y >> 6;
-//	}
-//}
 
 void HelloGL::InitGL(int argc, char* argv[])
 {
@@ -398,6 +434,8 @@ void HelloGL::InitGL(int argc, char* argv[])
 	glutTimerFunc(REFRESHRATE, GLUTCallbacks::Timer, REFRESHRATE);
 	glutKeyboardFunc(GLUTCallbacks::KeyboardDown);
 	glutKeyboardUpFunc(GLUTCallbacks::KeyboardUp);
+	glutSpecialFunc(GLUTCallbacks::KeyboardSpecialDown);
+	glutSpecialUpFunc(GLUTCallbacks::KeyboardSpecialUp);
 	glutMouseFunc(GLUTCallbacks::Mouse);
 	glutMotionFunc(GLUTCallbacks::Motion);
 

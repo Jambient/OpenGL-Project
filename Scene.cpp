@@ -1,14 +1,5 @@
 #include "Scene.h"
 
-void printNodeData(TreeNode* node, int depth) {
-	// Print indentation based on depth
-	for (int i = 0; i < depth; ++i) {
-		std::cout << "  ";
-	}
-	// Print node data
-	std::cout << node->name << std::endl;
-}
-
 Scene::Scene(const char* filePath)
 {
 	pugi::xml_document doc;
@@ -16,43 +7,48 @@ Scene::Scene(const char* filePath)
 		std::cerr << "Failed to load scene xml: " << filePath << std::endl;
 
 	pugi::xml_node scene = doc.child("scene");
+	pugi::xml_node camera = scene.child("camera");
+
+	if (camera)
+	{
+		m_cameraPosition = GetVectorFromNode(camera.child("position"), glm::vec3());
+		m_cameraRotation = GetVectorFromNode(camera.child("rotation"), glm::vec3());
+	}
+
 	pugi::xml_node objectsRoot = scene.child("objects");
 	
-	treeRoot = new TreeNode();
-	treeRoot->name = "Scene";
-	BuildSceneTreeRecursively(treeRoot, objectsRoot);
-
-	IterateTree(treeRoot, 0, printNodeData, PRE_ORDER);
+	m_treeRoot = new TreeNode();
+	m_treeRoot->name = "Scene";
+	BuildSceneTreeRecursively(m_treeRoot, objectsRoot);
 }
 
 Scene::~Scene()
 {
-	std::cout << "cleaning up";
-	IterateTree(treeRoot, 0, [](TreeNode* node, int depth) {
+	IterateTree(m_treeRoot, 0, [](TreeNode* node, int depth, TraversalType type) {
 		delete node;
 		node = nullptr;
 	}, POST_ORDER);
 }
 
-void Scene::IterateTree(TreeNode* node, int currentDepth, std::function<void(TreeNode*, int)> onNodeCallback, TraversalType traversalType)
+void Scene::IterateTree(TreeNode* node, int currentDepth, std::function<void(TreeNode*, int, TraversalType)> onNodeCallback, TraversalType traversalType)
 {
 	if (node == nullptr)
 		return;
 
-	if (traversalType == PRE_ORDER)
-		onNodeCallback(node, currentDepth);
+	if (traversalType & PRE_ORDER)
+		onNodeCallback(node, currentDepth, PRE_ORDER);
 
 	// Traverse the left child
 	IterateTree(node->child, currentDepth + 1, onNodeCallback, traversalType);
 
-	if (traversalType == IN_ORDER)
-		onNodeCallback(node, currentDepth);
+	if (traversalType & IN_ORDER)
+		onNodeCallback(node, currentDepth, IN_ORDER);
 
 	// Traverse the right sibling
 	IterateTree(node->sibling, currentDepth, onNodeCallback, traversalType);
 
-	if (traversalType == POST_ORDER)
-		onNodeCallback(node, currentDepth);
+	if (traversalType & POST_ORDER)
+		onNodeCallback(node, currentDepth, POST_ORDER);
 }
 
 glm::vec3 GetVectorFromNode(pugi::xml_node node, glm::vec3 defaultValue)
@@ -129,4 +125,10 @@ void Scene::BuildSceneTreeRecursively(TreeNode* parentNode, pugi::xml_node xmlNo
 
 		previousNode = childNode;
 	}
+}
+
+glm::vec3 Scene::GetVectorFromNode(pugi::xml_node node, glm::vec3 defaultValue)
+{
+	if (!node) { return defaultValue; }
+	return glm::vec3(node.attribute("x").as_float(), node.attribute("y").as_float(), node.attribute("z").as_float());
 }

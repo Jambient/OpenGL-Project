@@ -1,4 +1,8 @@
 <scene>
+	<camera>
+		<position x="0" y="5" z="30" />
+		<rotation x="0" y="180" z="0" />
+	</camera>
 	<objects>
 		<cube name="Baseplate">
 			<properties>

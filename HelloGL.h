@@ -28,17 +28,21 @@ public:
 	void Display();
 	void KeyboardDown(unsigned char key, int x, int y);
 	void KeyboardUp(unsigned char key, int x, int y);
+	void KeyboardSpecialDown(int key, int x, int y);
+	void KeyboardSpecialUp(int key, int x, int y);
 	void Mouse(int button, int state, int x, int y);
 	void Motion(int x, int y);
 
 	void InitObjects();
 	void InitLighting();
-	//void InitFont();
 	void InitGL(int argc, char* argv[]);
 
 	glm::vec3 GetRayFromScreenPosition(int x, int y);
 	void Raycast(int mouseX, int mouseY);
 	void RenderText(const char* text, const glm::ivec2& screenPosition, const Color& color = {1.0f, 1.0f, 1.0f});
+
+	glm::vec3 GetClosestAxisAlignedVector(glm::vec3 vec);
+	void UpdateFPS(int newFPS) { fps = newFPS; }
 
 	void SceneMenu(int item);
 
@@ -63,6 +67,14 @@ private:
 	Scene* currentScene;
 	std::vector<Scene*> scenes;
 
-	//FT_Library library;
-	//FT_Face face;
+	glm::vec3 axisAlignedVectors[6] = {
+		{0, 1, 0},
+		{0, -1, 0},
+		{1, 0, 0},
+		{-1, 0, 0},
+		{0, 0, 1},
+		{0, 0, -1}
+	};
+
+	int fps = 0;
 };

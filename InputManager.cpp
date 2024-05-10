@@ -3,7 +3,7 @@
 namespace InputManager
 {
     bool keys[256];
-    bool mouse[3];
+    bool specialKeys[246];
 
     void OnKeyboardDown(unsigned char key)
     {
@@ -15,8 +15,23 @@ namespace InputManager
         keys[key] = false;
     }
 
+    void OnKeyboardSpecialDown(int key)
+    {
+        specialKeys[key] = true;
+    }
+
+    void OnKeyboardSpecialUp(int key)
+    {
+        specialKeys[key] = false;
+    }
+
     bool IsKeyDown(int key)
     {
         return keys[key];
+    }
+
+    bool IsSpecialKeyDown(int key)
+    {
+        return specialKeys[key];
     }
 }

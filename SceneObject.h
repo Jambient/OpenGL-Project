@@ -27,8 +27,7 @@ public:
 	virtual ~SceneObject();
 
 	virtual void Update();
-	virtual void Draw(bool drawBoundingBox = false);
-	virtual float SignedDistanceField(const glm::vec3& point);
+	virtual void Draw(bool drawBoundingBox = false, glm::vec3 positionOffset = glm::vec3());
 
 	glm::vec3 GetPosition() const { return _position; }
 	void SetPosition(glm::vec3 position) { _position = position; UpdateBoundingBox(); }
