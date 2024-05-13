@@ -136,7 +136,11 @@ bool Texture2D::LoadBMP(const char* path)
 
     glGenTextures(1, &_ID); //Get next Texture ID
     glBindTexture(GL_TEXTURE_2D, _ID); //Bind the texture to the ID
-    gluBuild2DMipmaps(GL_TEXTURE_2D, infoHeaderData.biBitCount / 8, infoHeaderData.biWidth, infoHeaderData.biHeight, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
+    GLint componentCount = infoHeaderData.biBitCount / 8;
+    if (componentCount == 3)
+        gluBuild2DMipmaps(GL_TEXTURE_2D, componentCount, infoHeaderData.biWidth, infoHeaderData.biHeight, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
+    else
+        gluBuild2DMipmaps(GL_TEXTURE_2D, componentCount, infoHeaderData.biWidth, infoHeaderData.biHeight, GL_BGRA_EXT, GL_UNSIGNED_BYTE, tempTextureData);
 
     delete[] tempTextureData;
 

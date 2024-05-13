@@ -247,7 +247,7 @@ namespace MeshLoader
 						{
 							multiIndex.texCoordsIndex = stof(indices[1]) - 1.0f;
 						}
-						if (indices.size() == 3)
+						if (indices.size() == 3) // vertex, texture coordinate (optional), normal indices
 						{
 							multiIndex.normalsIndex = stof(indices[2]) - 1.0f;
 						}

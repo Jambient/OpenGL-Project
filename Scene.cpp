@@ -72,48 +72,67 @@ void Scene::BuildSceneTreeRecursively(TreeNode* parentNode, pugi::xml_node xmlNo
 		else
 			childNode->name = objectType;
 
-		// create scene object
+		// get object properties
 		pugi::xml_node properties = object.child("properties");
-		pugi::xml_node transform = properties.child("transform");
-		pugi::xml_node textureProperty = properties.child("texture");
+		pugi::xml_node transformData = properties.child("transform");
+		pugi::xml_node textureData = properties.child("texture");
+		pugi::xml_node animationData = properties.child("animation");
 
+		Texture2D* texture = new Texture2D();
+		if (textureData)
+			texture->LoadBMP(textureData.attribute("path").value());
+		else
+			texture->LoadRAW("Textures/penguins.raw", 512, 512);
+
+		glm::vec3 position = GetVectorFromNode(transformData.child("position"), glm::vec3(0.0f, 0.0f, 0.0f));
+		glm::vec3 rotation = GetVectorFromNode(transformData.child("rotation"), glm::vec3(0.0f, 0.0f, 0.0f));
+		glm::vec3 scale = GetVectorFromNode(transformData.child("scale"), glm::vec3(1.0f, 1.0f, 1.0f));
+
+		// create object
 		if (objectType == "obj")
 		{
 			Mesh* objMesh = MeshLoader::Load(object.attribute("path").value());
-			Texture2D* texture = new Texture2D();
-			if (textureProperty)
-				texture->LoadBMP(textureProperty.attribute("path").value());
-			else
-				texture->LoadRAW("Textures/penguins.raw", 512, 512);
-
-			if (properties && transform)
-			{
-				glm::vec3 position = GetVectorFromNode(transform.child("position"), glm::vec3(0.0f, 0.0f, 0.0f));
-				glm::vec3 rotation = GetVectorFromNode(transform.child("rotation"), glm::vec3(0.0f, 0.0f, 0.0f));
-				glm::vec3 scale = GetVectorFromNode(transform.child("scale"), glm::vec3(1.0f, 1.0f, 1.0f));
-				childNode->object = new SceneObject(objMesh, texture, position);
-				childNode->object->SetRotation(rotation);
-				childNode->object->SetScale(scale);
-			}
+			childNode->object = new SceneObject(objMesh, texture, position);
+			childNode->object->SetRotation(rotation);
+			childNode->object->SetScale(scale);
 		}
 		else if (objectType == "cube")
 		{
 			Mesh* cubeMesh = MeshLoader::Load("Models/cube.txt");
-			Texture2D* texture = new Texture2D();
-			if (textureProperty)
-				texture->LoadBMP(textureProperty.attribute("path").value());
-			else
-				texture->LoadRAW("Textures/penguins.raw", 512, 512);
+			childNode->object = new Cube(cubeMesh, texture, position, 0.0f);
+			childNode->object->SetRotation(rotation);
+			childNode->object->SetScale(scale);
+		}
+		else
+		{
+			std::cout << "Unknown Object Type: " << objectType;
+			delete texture;
+		}
 
-			if (properties && transform)
+		// handle animation
+		if (animationData)
+		{
+			std::vector<Keyframe> keyframes;
+			keyframes.push_back({0, position, rotation, scale});
+			for (pugi::xml_node& keyframeNode : animationData.children("keyframe"))
 			{
-				glm::vec3 position = GetVectorFromNode(transform.child("position"), glm::vec3(0.0f, 0.0f, 0.0f));
-				glm::vec3 rotation = GetVectorFromNode(transform.child("rotation"), glm::vec3(0.0f, 0.0f, 0.0f));
-				glm::vec3 scale = GetVectorFromNode(transform.child("scale"), glm::vec3(1.0f, 1.0f, 1.0f));
-				childNode->object = new Cube(cubeMesh, texture, position, 0.0f);
-				childNode->object->SetRotation(rotation);
-				childNode->object->SetScale(scale);
+				keyframes.push_back({
+					keyframeNode.attribute("time").as_float(),
+					GetVectorFromNode(keyframeNode.child("position"), position),
+					GetVectorFromNode(keyframeNode.child("rotation"), rotation),
+					GetVectorFromNode(keyframeNode.child("scale"), scale)
+				});
 			}
+
+			Animation* anim = new Animation(childNode->object, keyframes);
+			if (pugi::xml_attribute a = animationData.attribute("easingStyle"))
+				anim->SetEasingStyle(a.as_string());
+			if (pugi::xml_attribute a = animationData.attribute("easingDirection"))
+				anim->SetEasingDirection(a.as_string());
+			if (pugi::xml_attribute a = animationData.attribute("shouldReverse"))
+				anim->ShouldReverse(a.as_bool());
+
+			childNode->object->SetAnimation(anim);
 		}
 
 		BuildSceneTreeRecursively(childNode, object);

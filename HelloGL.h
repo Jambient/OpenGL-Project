@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 #include <string>
-#include "Structures.h"
+#include "Commons.h"
 #include "Cube.h"
 #include "Camera.h"
 #include "Scene.h"
@@ -52,6 +52,7 @@ private:
 
 	Camera* camera;
 	std::vector<SceneObject*> objects;
+	SceneObject* skybox;
 
 	bool isRightClickDown;
 	glm::vec3 lastMousePosition;
@@ -76,5 +77,6 @@ private:
 		{0, 0, -1}
 	};
 
+	int previousElapsedTime = 0;
 	int fps = 0;
 };

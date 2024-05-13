@@ -1,7 +1,7 @@
 #include "HelloGL.h"
 #include <cmath>
 #include <iostream>
-#include "Structures.h"
+#include "Commons.h"
 #include "Cube.h"
 #include "MovingCube.h"
 #include "Camera.h"
@@ -26,18 +26,23 @@ HelloGL::~HelloGL(void)
 	delete camera;
 	camera = nullptr;
 
-	delete currentScene;
-	currentScene = nullptr;
-
-	for (int i = 0; i < objects.size(); i++)
+	for (int i = 0; i < scenes.size(); i++)
 	{
-		delete objects[i];
+		delete scenes[i];
 	}
 }
 
 void HelloGL::Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	skybox->Draw();
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_LIGHTING);
 
 	int currentY = 30;
 	Color textColor = { 1.0f, 1.0f, 1.0f };
@@ -109,6 +114,10 @@ glm::vec3 HelloGL::GetClosestAxisAlignedVector(glm::vec3 vec)
 
 void HelloGL::Update()
 {
+	float currentTime = glutGet(GLUT_ELAPSED_TIME);
+	float deltaTime = (currentTime - previousElapsedTime) / 1000.0f;
+	UpdateFPS(1.0f / deltaTime);
+
 	// update lighting
 	glLightfv(GL_LIGHT0, GL_AMBIENT, &(lightData->Ambient.x));
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, &(lightData->Diffuse.x));
@@ -122,15 +131,16 @@ void HelloGL::Update()
 	//row1Rotation = fmod(row1Rotation + 0.5f, 360.0f);
 	row2Rotation = fmod(row2Rotation + 5.0f, VIEWPORT_WIDTH);
 	row3Rotation = fmod(row3Rotation - 0.5f, 360.0f);
-	scale = abs(sin(glutGet(GLUT_ELAPSED_TIME) / 500.0f)) / 1.5f + 0.2f;
+	scale = abs(sin(currentTime / 500.0f)) / 1.5f + 0.2f;
 
-	/*for (int i = 0; i < objects.size(); i++)
-	{
-		if (objects[i] == selectedObject)
+	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth, TraversalType type) {
+		if (node->object != nullptr)
 		{
-			objects[i]->Update();
+			Animation* anim = node->object->GetAnimation();
+			if (anim != nullptr)
+				anim->Update(deltaTime);
 		}
-	}*/
+	}, PRE_ORDER);
 
 	glm::vec3 cameraForwardVector = camera->GetForwardVector();
 	glm::vec3 cameraRightVector = camera->GetRightVector();
@@ -162,6 +172,8 @@ void HelloGL::Update()
 	}
 
 	camera->Update(viewMatrix);
+	skybox->SetPosition(camera->GetPosition());
+	previousElapsedTime = currentTime;
 	glutPostRedisplay();
 }
 
@@ -221,20 +233,6 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 		{
 			positionOffset -= objectPositionOffset;
 		}
-
-		/*glm::vec3 offset = obj->GetPosition() - rayOrigin;
-		float distanceAlongRay = glm::dot(glm::vec3(offset.x, offset.y, offset.z), rayDirection);
-
-		if (distanceAlongRay < 0) return;
-
-		glm::vec3 intersectionPoint = glm::vec3(rayOrigin.x, rayOrigin.y, rayOrigin.z) + rayDirection * distanceAlongRay;
-
-		float intersectionDistance = obj->SignedDistanceField(intersectionPoint);
-
-		if (intersectionDistance < 0 && distanceAlongRay < closestIntersection) {
-			closestIntersection = intersectionDistance;
-			closestObject = obj;
-		}*/
 
 	}, TraversalType(PRE_ORDER | IN_ORDER));
 
@@ -337,7 +335,7 @@ void HelloGL::Motion(int x, int y)
 		glm::vec3 currentMousePosition = glm::vec3(x + glutGet(GLUT_WINDOW_X), y + glutGet(GLUT_WINDOW_Y), 0);
 		glm::vec3 mouseOffset = currentMousePosition - lockedMousePosition;
 
-		camera->OffsetRotation(glm::vec3(-mouseOffset.y, mouseOffset.x, 0.0f) * 0.01f);
+		camera->OffsetRotation(glm::vec3(mouseOffset.y, -mouseOffset.x, 0.0f) * 0.01f);
 
 		SetCursorPos(lockedMousePosition.x, lockedMousePosition.y);
 	}
@@ -351,6 +349,12 @@ void HelloGL::InitObjects()
 
 	camera = new Camera(currentScene->GetCameraPosition(), currentScene->GetCameraRotation());
 	glClearColor(0.25098f, 0.67058f, 0.93725f, 1.0);
+
+	Mesh* skyboxMesh = MeshLoader::Load("Models/skybox.obj");
+	Texture2D* skyboxTexture = new Texture2D();
+	skyboxTexture->LoadBMP("Textures/blue-sky.bmp");
+	skybox = new SceneObject(skyboxMesh, skyboxTexture, camera->GetPosition());
+	skybox->SetScale(glm::vec3(2.0f, 2.0f, 2.0f));
 
 	//camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 

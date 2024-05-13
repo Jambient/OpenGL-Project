@@ -1,4 +1,6 @@
 #include "SceneObject.h"
+#include "Commons.h"
+#include <glm/glm.hpp>
 
 glm::vec3 vertexToVector(Vertex vertex)
 {
@@ -7,35 +9,35 @@ glm::vec3 vertexToVector(Vertex vertex)
 
 void SceneObject::UpdateBoundingBox()
 {
-	_bbox.bounds[0] = _bbox.bounds[1] = vertexToVector((*_mesh->Vertices)[0]) * _scale;
+	m_bbox.bounds[0] = m_bbox.bounds[1] = RotateVector(vertexToVector((*m_mesh->Vertices)[0]) * m_scale, m_rotation);
 
-	for (const Vertex& vertex : *_mesh->Vertices)
+	for (const Vertex& vertex : *m_mesh->Vertices)
 	{
-		glm::vec3 scaledVertex = vertexToVector(vertex) * _scale;
-		_bbox.bounds[0] = glm::min(_bbox.bounds[0], scaledVertex);
-		_bbox.bounds[1] = glm::max(_bbox.bounds[1], scaledVertex);
+		glm::vec3 scaledVertex = RotateVector(vertexToVector(vertex) * m_scale, m_rotation);
+		m_bbox.bounds[0] = glm::min(m_bbox.bounds[0], scaledVertex);
+		m_bbox.bounds[1] = glm::max(m_bbox.bounds[1], scaledVertex);
 	}
 
-	_bbox.bounds[0] += _position;
-	_bbox.bounds[1] += _position;
+	m_bbox.bounds[0] += m_position;
+	m_bbox.bounds[1] += m_position;
 }
 
 SceneObject::SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position)
 {
-	_mesh = mesh;
-	_texture = texture;
-	_position = position;
-	_rotation = glm::vec3();
-	_scale = glm::vec3(1, 1, 1);
+	m_mesh = mesh;
+	m_texture = texture;
+	m_position = position;
+	m_rotation = glm::vec3();
+	m_scale = glm::vec3(1, 1, 1);
 
-	_material = new Material();
-	_material->Ambient.x = 1.0f; _material->Ambient.y = 1.0f; _material->Ambient.z = 1.0f;
-	_material->Ambient.w = 1.0f;
-	_material->Diffuse.x = 1.0f; _material->Diffuse.y = 1.0f; _material->Diffuse.z = 1.0f;
-	_material->Diffuse.w = 1.0f;
-	_material->Specular.x = 0.0f; _material->Specular.y = 0.0f; _material->Specular.z = 0.0f;
-	_material->Specular.w = 1.0f;
-	_material->Shininess = 250.0f;
+	m_material = new Material();
+	m_material->Ambient.x = 1.0f; m_material->Ambient.y = 1.0f; m_material->Ambient.z = 1.0f;
+	m_material->Ambient.w = 1.0f;
+	m_material->Diffuse.x = 1.0f; m_material->Diffuse.y = 1.0f; m_material->Diffuse.z = 1.0f;
+	m_material->Diffuse.w = 1.0f;
+	m_material->Specular.x = 0.0f; m_material->Specular.y = 0.0f; m_material->Specular.z = 0.0f;
+	m_material->Specular.w = 1.0f;
+	m_material->Shininess = 250.0f;
 
 	UpdateBoundingBox();
 }
@@ -50,52 +52,52 @@ void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, G
 
 void SceneObject::Draw(bool drawBoundingBox, glm::vec3 positionOffset)
 {
-	if (_mesh->Vertices != nullptr && _mesh->Normals != nullptr && _mesh->Indices != nullptr && _mesh->TexCoords != nullptr)
+	if (m_mesh->Vertices != nullptr && m_mesh->Normals != nullptr && m_mesh->Indices != nullptr && m_mesh->TexCoords != nullptr)
 	{
-		bool hasTexCoords = _mesh->TexCoords->size() > 0;
+		bool hasTexCoords = m_mesh->TexCoords->size() > 0;
 
 		if (hasTexCoords)
-			glBindTexture(GL_TEXTURE_2D, _texture->GetID());
+			glBindTexture(GL_TEXTURE_2D, m_texture->GetID());
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
 		if (hasTexCoords)
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-		glVertexPointer(3, GL_FLOAT, 0, _mesh->Vertices->data());
-		glNormalPointer(GL_FLOAT, 0, _mesh->Normals->data());
+		glVertexPointer(3, GL_FLOAT, 0, m_mesh->Vertices->data());
+		glNormalPointer(GL_FLOAT, 0, m_mesh->Normals->data());
 		if (hasTexCoords)
-			glTexCoordPointer(2, GL_FLOAT, 0, _mesh->TexCoords->data());
+			glTexCoordPointer(2, GL_FLOAT, 0, m_mesh->TexCoords->data());
 
 		glPushMatrix();
-		glTranslatef(_position.x + positionOffset.x, _position.y + positionOffset.y, _position.z + positionOffset.z);
-		glRotatef(_rotation.x, 1.0f, 0.0f, 0.0f);
-		glRotatef(_rotation.y, 0.0f, 1.0f, 0.0f);
-		glRotatef(_rotation.z, 0.0f, 0.0f, 1.0f);
-		glScalef(_scale.x, _scale.y, _scale.z);
+		glTranslatef(m_position.x + positionOffset.x, m_position.y + positionOffset.y, m_position.z + positionOffset.z);
+		glRotatef(m_rotation.x, 1.0f, 0.0f, 0.0f);
+		glRotatef(m_rotation.y, 0.0f, 1.0f, 0.0f);
+		glRotatef(m_rotation.z, 0.0f, 0.0f, 1.0f);
+		glScalef(m_scale.x, m_scale.y, m_scale.z);
 
-		if (_mesh->MaterialUsage.size() > 0)
+		if (m_mesh->MaterialUsage.size() > 0)
 		{
-			for (const auto& pair : _mesh->MaterialUsage)
+			for (const auto& pair : m_mesh->MaterialUsage)
 			{
-				Material currentMat = _mesh->Materials[pair.second];
+				Material currentMat = m_mesh->Materials[pair.second];
 				// NEED TO UNDERSTAND STAND WHY SWAPPING THESE AROUND WORKED
 				glMaterialfv(GL_FRONT, GL_AMBIENT, &(currentMat.Diffuse.x));
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, &(currentMat.Ambient.x));
 				glMaterialfv(GL_FRONT, GL_SPECULAR, &(currentMat.Specular.x));
 				glMaterialf(GL_FRONT, GL_SHININESS, currentMat.Shininess);
 
-				glDrawRangeElements(GL_TRIANGLES, pair.first[0], pair.first[1], _mesh->Indices->size(), GL_UNSIGNED_SHORT, _mesh->Indices);
+				glDrawRangeElements(GL_TRIANGLES, pair.first[0], pair.first[1], m_mesh->Indices->size(), GL_UNSIGNED_SHORT, m_mesh->Indices);
 			}
 		}
 		else
 		{
-			glMaterialfv(GL_FRONT, GL_AMBIENT, &(_material->Ambient.x));
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, &(_material->Diffuse.x));
-			glMaterialfv(GL_FRONT, GL_SPECULAR, &(_material->Specular.x));
-			glMaterialf(GL_FRONT, GL_SHININESS, _material->Shininess);
+			glMaterialfv(GL_FRONT, GL_AMBIENT, &(m_material->Ambient.x));
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, &(m_material->Diffuse.x));
+			glMaterialfv(GL_FRONT, GL_SPECULAR, &(m_material->Specular.x));
+			glMaterialf(GL_FRONT, GL_SHININESS, m_material->Shininess);
 
-			glDrawElements(GL_TRIANGLES, _mesh->Indices->size(), GL_UNSIGNED_SHORT, _mesh->Indices->data());
+			glDrawElements(GL_TRIANGLES, m_mesh->Indices->size(), GL_UNSIGNED_SHORT, m_mesh->Indices->data());
 		}
 
 		glPopMatrix();
@@ -110,8 +112,8 @@ void SceneObject::Draw(bool drawBoundingBox, glm::vec3 positionOffset)
 	{
 		glDisable(GL_LIGHTING);
 		glPushMatrix();
-		glm::vec3 size = (_bbox.bounds[1] - _bbox.bounds[0]);
-		glm::vec3 center = (_bbox.bounds[0] + _bbox.bounds[1]) / 2.0f + positionOffset;
+		glm::vec3 size = (m_bbox.bounds[1] - m_bbox.bounds[0]);
+		glm::vec3 center = (m_bbox.bounds[0] + m_bbox.bounds[1]) / 2.0f + positionOffset;
 
 		glColor3f(0.0f, 0.0f, 1.0f);
 		glTranslatef(center.x, center.y, center.z);

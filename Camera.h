@@ -7,7 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "GL/freeglut.h"
 #include "GLUTCallbacks.h"
-#include "Structures.h"
+#include "Commons.h"
 #include <algorithm>
 
 enum class ViewMode
@@ -25,14 +25,12 @@ private:
 	ViewMode m_viewMode = ViewMode::FLY;
 	glm::vec3 m_orbitTargetPosition = glm::vec3();
 	float m_orbitDistance = 10.0f;
-
-	glm::vec3 GetRotatedVector(glm::vec3 vector);
 public:
 	Camera(glm::vec3 position, glm::vec3 rotation);
 
-	glm::vec3 GetPosition() { return m_position; }
-	glm::vec3 GetForwardVector() { return GetRotatedVector(glm::vec3(0.0f, 0.0f, 1.0f)); }
-	glm::vec3 GetUpVector() { return GetRotatedVector(glm::vec3(0.0f, 1.0f, 0.0f)); }
+	glm::vec3 GetPosition() const { return m_position; }
+	glm::vec3 GetForwardVector() { return RotateVector(glm::vec3(0.0f, 0.0f, 1.0f), m_rotation); }
+	glm::vec3 GetUpVector() { return RotateVector(glm::vec3(0.0f, 1.0f, 0.0f), m_rotation); }
 	glm::vec3 GetRightVector();
 
 	ViewMode GetViewMode() const { return m_viewMode; }

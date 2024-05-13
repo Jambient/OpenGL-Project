@@ -5,7 +5,7 @@
 #include <gl/GLU.h>
 #include <glm/glm.hpp>
 #include "GL/freeglut.h"
-#include "Structures.h"
+#include "Commons.h"
 #include "SceneObject.h"
 
 class Cube : public SceneObject

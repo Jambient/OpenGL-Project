@@ -5,8 +5,11 @@
 #include <gl/GLU.h>
 #include "GL/freeglut.h"
 #include <glm/glm.hpp>
-#include "Structures.h"
+#include "Commons.h"
 #include "Texture2D.h"
+#include "Animation.h"
+
+class Animation;
 
 class SceneObject
 {
@@ -14,13 +17,14 @@ private:
 	void UpdateBoundingBox();
 
 protected:
-	Mesh* _mesh;
-	Texture2D* _texture;
-	glm::vec3 _position;
-	glm::vec3 _rotation;
-	glm::vec3 _scale;
-	Material* _material;
-	AABBox _bbox;
+	Mesh* m_mesh;
+	Texture2D* m_texture;
+	glm::vec3 m_position;
+	glm::vec3 m_rotation;
+	glm::vec3 m_scale;
+	Material* m_material;
+	AABBox m_bbox;
+	Animation* m_animation;
 
 public:
 	SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position);
@@ -29,16 +33,19 @@ public:
 	virtual void Update();
 	virtual void Draw(bool drawBoundingBox = false, glm::vec3 positionOffset = glm::vec3());
 
-	glm::vec3 GetPosition() const { return _position; }
-	void SetPosition(glm::vec3 position) { _position = position; UpdateBoundingBox(); }
-	void OffsetPosition(glm::vec3 offset) { _position += offset; UpdateBoundingBox(); }
+	glm::vec3 GetPosition() const { return m_position; }
+	void SetPosition(glm::vec3 position) { m_position = position; UpdateBoundingBox(); }
+	void OffsetPosition(glm::vec3 offset) { m_position += offset; UpdateBoundingBox(); }
 
-	glm::vec3 GetRotation() const { return _rotation; }
-	void SetRotation(glm::vec3 rotation) { _rotation = rotation; UpdateBoundingBox(); }
-	void OffsetRotation(glm::vec3 offset) { _rotation += offset; UpdateBoundingBox(); }
+	glm::vec3 GetRotation() const { return m_rotation; }
+	void SetRotation(glm::vec3 rotation) { m_rotation = rotation; UpdateBoundingBox(); }
+	void OffsetRotation(glm::vec3 offset) { m_rotation += offset; UpdateBoundingBox(); }
 
-	glm::vec3 GetScale() const { return _scale; }
-	void SetScale(glm::vec3 scale) { _scale = scale; UpdateBoundingBox(); }
+	glm::vec3 GetScale() const { return m_scale; }
+	void SetScale(glm::vec3 scale) { m_scale = scale; UpdateBoundingBox(); }
 
-	AABBox GetBoundingBox() const { return _bbox; }
+	Animation* GetAnimation() const { return m_animation; }
+	void SetAnimation(Animation* animation) { m_animation = animation; }
+
+	AABBox GetBoundingBox() const { return m_bbox; }
 };

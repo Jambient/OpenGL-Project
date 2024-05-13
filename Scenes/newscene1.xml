@@ -1,0 +1,80 @@
+<scene>
+	<camera>
+		<position x="0" y="5" z="30" />
+		<rotation x="0" y="180" z="0" />
+	</camera>
+	<objects>
+		<cube name="Baseplate">
+			<properties>
+				<transform>
+					<scale x="10" y="0.5" z="10" />
+				</transform>
+				<texture path="Textures/ground.bmp" />
+			</properties>
+			<obj name="Suzanne" path="Models/monkey.obj">
+				<properties>
+					<transform>
+						<position x="5" y="10" z="0" />
+					</transform>
+					<animation easingStyle="Sine" easingDirection="InOut" >
+						<keyframe time="1">
+							<position x="-5" y="10" z="0" />
+						</keyframe>
+						<keyframe time="2">
+							<position x="-5" y="20" z="0" />
+						</keyframe>
+						<keyframe time="3">
+							<position x="5" y="20" z="0" />
+						</keyframe>
+						<keyframe time="4">
+							<position x="5" y="10" z="0" />
+						</keyframe>
+					</animation>
+				</properties>
+			</obj>
+			<obj name="Box" path="Models/box.obj">
+				<properties>
+					<transform>
+						<position x="0" y="1.5" z="0" />
+						<scale x="2" y="2" z="2" />
+					</transform>
+					<texture path="Textures/box-texture.bmp" />
+					<animation >
+						<keyframe time="2">
+							<rotation x="0" y="360" z="0" />
+						</keyframe>
+					</animation>
+				</properties>
+			</obj>
+			<obj name="Box" path="Models/box.obj">
+				<properties>
+					<transform>
+						<position x="4" y="10" z="0" />
+						<scale x="2" y="2" z="2" />
+					</transform>
+					<texture path="Textures/box-texture.bmp" />
+					<animation easingStyle="Bounce" easingDirection="Out" >
+						<keyframe time="2">
+							<position x="4" y="1.5" z="0" />
+						</keyframe>
+					</animation>
+				</properties>
+			</obj>
+			<obj name="Box" path="Models/box.obj">
+				<properties>
+					<transform>
+						<position x="-4" y="1.5" z="0" />
+						<scale x="2" y="2" z="2" />
+					</transform>
+					<texture path="Textures/box-texture.bmp" />
+					<animation easingStyle="Sine" easingDirection="InOut" shouldReverse="true" >
+						<keyframe time="2">
+							<scale x="4" y="4" z="4" />
+							<position x="-4" y="2.5" z="0" />
+						</keyframe>
+					</animation>
+				</properties>
+			</obj>
+		</cube>
+	</objects>
+</scene>

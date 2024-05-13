@@ -12,22 +12,22 @@ MovingCube::~MovingCube()
 
 void MovingCube::Draw()
 {
-	if (_mesh->Vertices != nullptr && _mesh->Normals != nullptr && _mesh->Indices != nullptr && _mesh->TexCoords != nullptr)
+	if (m_mesh->Vertices != nullptr && m_mesh->Normals != nullptr && m_mesh->Indices != nullptr && m_mesh->TexCoords != nullptr)
 	{
-		glBindTexture(GL_TEXTURE_2D, _texture->GetID());
+		glBindTexture(GL_TEXTURE_2D, m_texture->GetID());
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-		glVertexPointer(3, GL_FLOAT, 0, _mesh->Vertices->data());
-		glNormalPointer(GL_FLOAT, 0, _mesh->Normals->data());
-		glTexCoordPointer(2, GL_FLOAT, 0, _mesh->TexCoords->data());
+		glVertexPointer(3, GL_FLOAT, 0, m_mesh->Vertices->data());
+		glNormalPointer(GL_FLOAT, 0, m_mesh->Normals->data());
+		glTexCoordPointer(2, GL_FLOAT, 0, m_mesh->TexCoords->data());
 
 		glPushMatrix();
 		glTranslatef(_position.x, _position.y, _position.z);
 
-		glDrawElements(GL_TRIANGLES, _mesh->Indices->size(), GL_UNSIGNED_SHORT, _mesh->Indices->data());
+		glDrawElements(GL_TRIANGLES, m_mesh->Indices->size(), GL_UNSIGNED_SHORT, m_mesh->Indices->data());
 		glPopMatrix();
 
 		glDisableClientState(GL_COLOR_ARRAY);
