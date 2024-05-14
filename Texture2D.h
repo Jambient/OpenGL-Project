@@ -45,3 +45,11 @@ struct ChunkData
 	std::string type;
 	std::vector<char> data;
 };
+
+enum class FilterType {
+	None = 0,
+	Sub = 1,
+	Up = 2,
+	Average = 3,
+	Paeth = 4
+};

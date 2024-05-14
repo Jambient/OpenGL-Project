@@ -2,6 +2,7 @@
 #include <vector>
 #include "Texture2D.h"
 #include <stdio.h>
+#include <algorithm>
 #include "inflatecpp/decompressor.h"
 
 using namespace std;
@@ -36,7 +37,6 @@ bool Texture2D::LoadRAW(const char* path, int width, int height)
 
 	glGenTextures(1, &_ID); // get next texture id
 	glBindTexture(GL_TEXTURE_2D, _ID); // bind the texture to the ID
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, tempTextureData); // specify details of our texture image
 	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, tempTextureData);
 
 	delete[] tempTextureData;
@@ -147,6 +147,49 @@ bool Texture2D::LoadBMP(const char* path)
     return true;
 }
 
+void applyFilter(FilterType type, std::vector<char>& prevScanline, std::vector<char>& scanline, size_t bytesPerPixel) {
+    switch (type) {
+    case FilterType::None:
+        // No filtering, do nothing
+        break;
+    case FilterType::Sub:
+        // Sub filter: subtract each byte from the corresponding byte of the previous pixel
+        for (size_t i = bytesPerPixel; i < scanline.size(); ++i) {
+            scanline[i] -= scanline[i - bytesPerPixel];
+        }
+        break;
+    case FilterType::Up:
+        // Up filter: subtract each byte from the corresponding byte of the previous scanline
+        for (size_t i = 0; i < scanline.size(); ++i) {
+            scanline[i] -= prevScanline[i];
+        }
+        break;
+    case FilterType::Average:
+        // Average filter: subtract each byte from the average of the corresponding bytes of the previous pixel and scanline
+        for (size_t i = 0; i < scanline.size(); ++i) {
+            char prevByte = (i < bytesPerPixel) ? 0 : scanline[i - bytesPerPixel];
+            char prevScanByte = prevScanline[i];
+            char aboveByte = (prevByte + prevScanByte) / 2;
+            scanline[i] -= aboveByte;
+        }
+        break;
+    case FilterType::Paeth:
+        // Paeth filter: predict byte based on previous pixel, previous scanline, and previous pixel of previous scanline
+        for (size_t i = 0; i < scanline.size(); ++i) {
+            char a = (i < bytesPerPixel) ? 0 : scanline[i - bytesPerPixel];
+            char b = prevScanline[i];
+            char c = (i < bytesPerPixel) ? 0 : prevScanline[i - bytesPerPixel];
+            char p = a + b - c;
+            char pa = std::abs(p - a);
+            char pb = std::abs(p - b);
+            char pc = std::abs(p - c);
+            char predicted = (pa <= pb && pa <= pc) ? a : (pb <= pc) ? b : c;
+            scanline[i] -= predicted;
+        }
+        break;
+    }
+}
+
 uint32_t swapEndian(uint32_t value) {
     return ((value & 0xFF000000) >> 24) |
         ((value & 0x00FF0000) >> 8) |
@@ -179,6 +222,24 @@ ChunkData* readNextChunk(std::ifstream& inFile) {
     inFile.seekg(4, ios::cur);
 
     return chunkData;
+}
+
+// Apply filtering to each scanline of the image data
+void applyFilters(std::vector<char>& imageData, size_t width, size_t height, size_t bytesPerPixel) {
+    std::vector<char> prevScanline(width * bytesPerPixel, 0); // Previous scanline initialized to zeros
+
+    for (size_t y = 0; y < height; ++y) {
+        size_t offset = y * width * bytesPerPixel;
+        FilterType filterType = static_cast<FilterType>(imageData[offset]); // Filter type is the first byte of each scanline
+        std::vector<char> scanline(imageData.begin() + offset + 1, imageData.begin() + offset + 1 + width * bytesPerPixel);
+        applyFilter(filterType, prevScanline, scanline, bytesPerPixel);
+
+        // Update previous scanline for next iteration
+        prevScanline = scanline;
+
+        // Copy filtered scanline back to image data
+        std::copy(scanline.begin(), scanline.end(), imageData.begin() + offset + 1);
+    }
 }
 
 bool Texture2D::LoadPNG(const char* path)
@@ -223,6 +284,28 @@ bool Texture2D::LoadPNG(const char* path)
 
     inFile.close();
 
+    size_t bytesPerPixel = 1;
+    switch (infoHeaderData.colorType) {
+    case 0: // Grayscale
+        bytesPerPixel = (infoHeaderData.bitDepth == 16) ? 2 : 1;
+        break;
+    case 2: // RGB
+        bytesPerPixel = (infoHeaderData.bitDepth * 3 + 7) / 8;
+        break;
+    case 3: // Palette
+        bytesPerPixel = 1;
+        break;
+    case 4: // Grayscale with alpha
+        bytesPerPixel = (infoHeaderData.bitDepth * 2 + 7) / 8;
+        break;
+    case 6: // RGBA
+        bytesPerPixel = (infoHeaderData.bitDepth * 4 + 7) / 8;
+        break;
+    default:
+        // Handle unsupported color types
+        break;
+    }
+
     Decompressor data_decompressor = Decompressor();
     unsigned int compressed_data_size = textureData.size();
     unsigned int max_decompressed_data_size = 300000000;
@@ -246,6 +329,8 @@ bool Texture2D::LoadPNG(const char* path)
 
     std::vector<char>* uncompressedData = new std::vector<char>();
     uncompressedData->insert(uncompressedData->end(), &decompressed_data[0], &decompressed_data[decompressed_data_size]);
+
+    applyFilters(*uncompressedData, infoHeaderData.width, infoHeaderData.height, bytesPerPixel);
 
     cout << infoHeaderData.width << " : " << infoHeaderData.height << endl;
     cout << (int)infoHeaderData.bitDepth << " : " << (int)infoHeaderData.colorType << endl;

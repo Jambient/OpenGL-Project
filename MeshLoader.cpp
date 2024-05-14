@@ -14,12 +14,29 @@ namespace MeshLoader
 {
 	namespace
 	{
+		// variables
 		std::map<std::string, Mesh*> cache;
 
-		void LoadVertices(ifstream& inFile, Mesh& mesh);
-		void LoadNormals(ifstream& inFile, Mesh& mesh);
-		void LoadIndices(ifstream& inFile, Mesh& mesh);
+		// structures
+		struct ArrayHasher {
+			std::size_t operator()(const std::array<GLshort, 3>& a) const {
+				std::size_t h = 0;
 
+				for (auto e : a) {
+					h ^= std::hash<int>{}(e)+0x9e3779b9 + (h << 6) + (h >> 2);
+				}
+				return h;
+			}
+		};
+
+		struct MultiIndex
+		{
+			GLshort verticesIndex;
+			GLshort texCoordsIndex;
+			GLshort normalsIndex;
+		};
+
+		// helper functions
 		vector<string> splitString(string str, char delim)
 		{
 			string s;
@@ -34,11 +51,23 @@ namespace MeshLoader
 			return v;
 		}
 
+		string getFileExtension(const char* path)
+		{
+			string strPath(path);
+			size_t lastDotPos = strPath.find_last_of('.');
+			if (lastDotPos != string::npos) {
+				return strPath.substr(lastDotPos + 1);
+			}
+			return "";
+		}
+
+		// loading functions
 		void LoadVertices(ifstream& inFile, Mesh& mesh)
 		{
-			inFile >> mesh.VertexCount;
+			int vertexCount;
+			inFile >> vertexCount;
 
-			for (int i = 0; i < mesh.VertexCount; i++)
+			for (int i = 0; i < vertexCount; i++)
 			{
 				Vertex vertex;
 				inFile >> vertex.x >> vertex.y >> vertex.z;
@@ -48,9 +77,10 @@ namespace MeshLoader
 
 		void LoadNormals(ifstream& inFile, Mesh& mesh)
 		{
-			inFile >> mesh.NormalCount;
+			int normalCount;
+			inFile >> normalCount;
 
-			for (int i = 0; i < mesh.NormalCount; i++)
+			for (int i = 0; i < normalCount; i++)
 			{
 				Vertex vector;
 				inFile >> vector.x >> vector.y >> vector.z;
@@ -60,9 +90,10 @@ namespace MeshLoader
 
 		void LoadTexCoords(ifstream& inFile, Mesh& mesh)
 		{
-			inFile >> mesh.TexCoordCount;
+			int texCoordCount;
+			inFile >> texCoordCount;
 
-			for (int i = 0; i < mesh.TexCoordCount; i++)
+			for (int i = 0; i < texCoordCount; i++)
 			{
 				TexCoord texCoord;
 				inFile >> texCoord.u >> texCoord.v;
@@ -72,9 +103,10 @@ namespace MeshLoader
 
 		void LoadIndices(ifstream& inFile, Mesh& mesh)
 		{
-			inFile >> mesh.IndexCount;
+			int indexCount;
+			inFile >> indexCount;
 
-			for (int i = 0; i < mesh.IndexCount; i += 3)
+			for (int i = 0; i < indexCount; i += 3)
 			{
 				GLushort i1, i2, i3;
 				inFile >> i1 >> i2 >> i3;
@@ -87,11 +119,9 @@ namespace MeshLoader
 		Mesh* loadTXT(const char* path)
 		{
 			Mesh* mesh = new Mesh();
-
 			ifstream inFile;
 
 			inFile.open(path);
-
 			if (!inFile.good())
 			{
 				cerr << "Can't open texture file " << path << endl;
@@ -144,7 +174,6 @@ namespace MeshLoader
 				{
 					if (currentMaterialData != nullptr)
 					{
-						//materials->insert(pair<string, Material>(currentMaterialName, *currentMaterialData));
 						materials[currentMaterialName] = *currentMaterialData;
 						delete currentMaterialData;
 					}
@@ -180,17 +209,6 @@ namespace MeshLoader
 
 			return materials;
 		}
-
-		struct ArrayHasher {
-			std::size_t operator()(const std::array<GLshort, 3>& a) const {
-				std::size_t h = 0;
-
-				for (auto e : a) {
-					h ^= std::hash<int>{}(e)+0x9e3779b9 + (h << 6) + (h >> 2);
-				}
-				return h;
-			}
-		};
 
 		Mesh* loadOBJ(const char* path)
 		{
@@ -326,16 +344,6 @@ namespace MeshLoader
 			}
 
 			return mesh;
-		}
-
-		string getFileExtension(const char* path)
-		{
-			string strPath(path);
-			size_t lastDotPos = strPath.find_last_of('.');
-			if (lastDotPos != string::npos) {
-				return strPath.substr(lastDotPos + 1);
-			}
-			return "";
 		}
 	}
 

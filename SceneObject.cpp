@@ -42,7 +42,12 @@ SceneObject::SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position)
 	UpdateBoundingBox();
 }
 
-SceneObject::~SceneObject(){}
+SceneObject::~SceneObject()
+{
+	delete m_mesh;
+	delete m_texture;
+	delete m_material;
+}
 void SceneObject::Update(){}
 
 void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, std::vector<GLushort>* indices) {

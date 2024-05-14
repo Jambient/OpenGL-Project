@@ -1,9 +1,6 @@
 #include "Camera.h"
 #include "Commons.h"
 #include <iostream>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
 
 Camera::Camera(glm::vec3 position, glm::vec3 rotation)
 {

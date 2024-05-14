@@ -4,8 +4,6 @@
 #include <gl/GLU.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-//#include "ft2build.h"
-//#include FT_FREETYPE_H
 #include "GL/freeglut.h"
 #include "GLUTCallbacks.h"
 #include <utility>
@@ -42,31 +40,36 @@ public:
 	void RenderText(const char* text, const glm::ivec2& screenPosition, const Color& color = {1.0f, 1.0f, 1.0f});
 
 	glm::vec3 GetClosestAxisAlignedVector(glm::vec3 vec);
-	void UpdateFPS(int newFPS) { fps = newFPS; }
 
 	void SceneMenu(int item);
 
 private:
-	float row1Rotation, row2Rotation, row3Rotation;
-	float scale;
-
 	Camera* camera;
-	std::vector<SceneObject*> objects;
 	SceneObject* skybox;
+	TreeNode* selectedObject;
+	SceneObject* testObject;
 
-	bool isRightClickDown;
 	glm::vec3 lastMousePosition;
 	glm::vec3 lockedMousePosition;
 
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;
-	TreeNode* selectedObject;
 
-	glm::vec4* lightPosition;
-	Lighting* lightData;
+	glm::vec4 lightPosition;
+	Lighting lightData;
 
 	Scene* currentScene;
 	std::vector<Scene*> scenes;
+	std::vector<const char*> sceneNames = {
+		"Test Scene",
+		"House Scene",
+		"Church Scene"
+	};
+	std::vector<const char*> scenePaths = {
+		"Scenes/scene1.xml",
+		"Scenes/scene2.xml",
+		"Scenes/scene3.xml",
+	};
 
 	glm::vec3 axisAlignedVectors[6] = {
 		{0, 1, 0},

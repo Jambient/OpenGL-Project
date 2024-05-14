@@ -8,23 +8,23 @@
 #include "InputManager.h"
 #include "MeshLoader.h"
 
-#define VIEWPORT_WIDTH 800
-#define VIEWPORT_HEIGHT 800
+HelloGL* g_game;
+void CloseCallback() {
+	delete g_game;
+	exit(0);
+}
 
 HelloGL::HelloGL(int argc, char* argv[]) 
 {
 	InitGL(argc, argv);
 	InitObjects();
 	InitLighting();
-	//InitFont();
-
-	glutMainLoop();
 }
 
 HelloGL::~HelloGL(void)
 {
 	delete camera;
-	camera = nullptr;
+	delete skybox;
 
 	for (int i = 0; i < scenes.size(); i++)
 	{
@@ -36,14 +36,15 @@ void HelloGL::Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glDisable(GL_LIGHTING);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+	// draw the skybox
+	glDisable(GL_LIGHTING); glDisable(GL_DEPTH_TEST); glDisable(GL_CULL_FACE);
 	skybox->Draw();
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHTING); glEnable(GL_DEPTH_TEST); glEnable(GL_CULL_FACE);
 
+	if (testObject != nullptr)
+		testObject->Draw();
+
+	// render every object in the scene
 	int currentY = 30;
 	Color textColor = { 1.0f, 1.0f, 1.0f };
 	Color highlightedColor = { 0.0f, 0.0f, 1.0f };
@@ -75,13 +76,17 @@ void HelloGL::Display()
 		{
 			positionOffset -= objectPositionOffset;
 		}
-		}, TraversalType(PRE_ORDER | IN_ORDER));
+	}, TraversalType(PRE_ORDER | IN_ORDER));
 
+	// display FPS
 	RenderText(("FPS: " + std::to_string(fps)).c_str(), { VIEWPORT_WIDTH - 80, 30 });
+
+	// display the current camera mode
 	std::string cameraModeText = "Camera Mode: ";
 	cameraModeText += (camera->GetViewMode() == ViewMode::FLY) ? "FLY" : "ORBIT";
 	RenderText(cameraModeText.c_str(), {VIEWPORT_WIDTH / 2 - 80, 30});
 
+	// update orbit target position if an object is selected.
 	if (selectedObject != nullptr)
 	{
 		AABBox bbox = selectedObject->object->GetBoundingBox();
@@ -114,25 +119,20 @@ glm::vec3 HelloGL::GetClosestAxisAlignedVector(glm::vec3 vec)
 
 void HelloGL::Update()
 {
-	float currentTime = glutGet(GLUT_ELAPSED_TIME);
-	float deltaTime = (currentTime - previousElapsedTime) / 1000.0f;
-	UpdateFPS(1.0f / deltaTime);
-
-	// update lighting
-	glLightfv(GL_LIGHT0, GL_AMBIENT, &(lightData->Ambient.x));
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, &(lightData->Diffuse.x));
-	glLightfv(GL_LIGHT0, GL_SPECULAR, &(lightData->Specular.x));
-	//glLightfv(GL_LIGHT0, GL_POSITION, &(lightPosition->x));
-	GLfloat testPos[] = { lightPosition->x, lightPosition->y, lightPosition->z, lightPosition->w };
-	glLightfv(GL_LIGHT0, GL_POSITION, testPos);
-
 	glLoadIdentity();
 
-	//row1Rotation = fmod(row1Rotation + 0.5f, 360.0f);
-	row2Rotation = fmod(row2Rotation + 5.0f, VIEWPORT_WIDTH);
-	row3Rotation = fmod(row3Rotation - 0.5f, 360.0f);
-	scale = abs(sin(currentTime / 500.0f)) / 1.5f + 0.2f;
+	// calculate delta time and update fps
+	float currentTime = glutGet(GLUT_ELAPSED_TIME);
+	float deltaTime = (currentTime - previousElapsedTime) / 1000.0f;
+	fps = 1.0f / deltaTime;
 
+	// update lighting
+	glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(lightData.Ambient));
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(lightData.Diffuse));
+	glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(lightData.Specular));
+	glLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(lightPosition));
+
+	// update all animations
 	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth, TraversalType type) {
 		if (node->object != nullptr)
 		{
@@ -142,10 +142,12 @@ void HelloGL::Update()
 		}
 	}, PRE_ORDER);
 
+	// get camera vectors
 	glm::vec3 cameraForwardVector = camera->GetForwardVector();
 	glm::vec3 cameraRightVector = camera->GetRightVector();
 	glm::vec3 cameraUpVector = camera->GetUpVector();
 
+	// update camera position based on input
 	if (InputManager::IsKeyDown('w'))
 		camera->OffsetPosition(cameraForwardVector);
 	if (InputManager::IsKeyDown('s'))
@@ -159,6 +161,7 @@ void HelloGL::Update()
 	if (InputManager::IsKeyDown('q'))
 		camera->OffsetPosition(-cameraUpVector);
 
+	// update object position based on input
 	if (selectedObject != nullptr)
 	{
 		if (InputManager::IsSpecialKeyDown(GLUT_KEY_LEFT))
@@ -199,10 +202,12 @@ glm::vec3 HelloGL::GetRayFromScreenPosition(int x, int y)
 
 void HelloGL::Raycast(int mouseX, int mouseY)
 {
+	// build ray from direction and origin
 	glm::vec3 rayDirection = GetRayFromScreenPosition(mouseX, mouseY);
 	glm::vec3 rayOrigin = camera->GetPosition();
 	Ray ray = Ray(rayOrigin, rayDirection);
 
+	// initialise variables
 	float closestIntersection = std::numeric_limits<float>::max();
 	TreeNode* closestObject = nullptr;
 	glm::vec3 positionOffset = glm::vec3();
@@ -214,10 +219,12 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 
 		if (type & PRE_ORDER)
 		{
+			// get bounding box and offset it according to hierarchy
 			AABBox bbox = obj->GetBoundingBox();
 			bbox.bounds[0] += positionOffset;
 			bbox.bounds[1] += positionOffset;
 
+			// check if ray intersects with bounding box
 			float intersectionDistance;
 			if (bbox.intersect(ray, intersectionDistance))
 			{
@@ -227,22 +234,28 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 					closestObject = node;
 				}
 			}
+
+			// add current objects position to offset
 			positionOffset += objectPositionOffset;
 		}
 		else if (type & IN_ORDER)
 		{
+			// remove objects position from offset so siblings are not affected.
 			positionOffset -= objectPositionOffset;
 		}
 
 	}, TraversalType(PRE_ORDER | IN_ORDER));
 
-	if (closestObject == nullptr)
+
+	if (closestObject == nullptr) // if no object is selected, switch off orbit mode
 		camera->SetViewMode(ViewMode::FLY);
 	else
 	{
+		// if an object is selected then set the orbit distance to fit the whole object.
 		AABBox bbox = closestObject->object->GetBoundingBox();
-		glm::vec3 size = (bbox.bounds[1] - bbox.bounds[0]);
+		glm::vec3 size = bbox.bounds[1] - bbox.bounds[0];
 		float distance = glm::max(glm::max(size.x, size.y), size.z);
+
 		camera->SetOrbitDistance(distance * 3.0f);
 	}
 
@@ -251,19 +264,21 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 
 void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, const Color& color)
 {
+	// get world position from screen position
 	glm::vec3 cameraPosition = camera->GetPosition();
 	glm::vec3 rayDirection = GetRayFromScreenPosition(screenPosition.x, screenPosition.y);
 	glm::vec3 worldPosition = cameraPosition + rayDirection;
 
-	glDisable(GL_LIGHTING); // Disable lighting for text rendering
+	glDisable(GL_LIGHTING);
 	glColor3f(color.r, color.g, color.b);
-
 	glPushMatrix();
+
+	// move string to correct render position
 	glTranslatef(worldPosition.x, worldPosition.y, worldPosition.z);
 	glRasterPos2f(0.0f, 0.0f);
 	glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char*)text);
-	glPopMatrix();
 
+	glPopMatrix();
 	glEnable(GL_LIGHTING);
 }
 
@@ -271,8 +286,7 @@ void HelloGL::SceneMenu(int item)
 {
 	if (scenes[item] == nullptr)
 	{
-		std::string pathStr = ("Scenes/scene" + std::to_string((item + 1)) + ".xml");
-		scenes[item] = new Scene(pathStr.c_str());
+		scenes[item] = new Scene(scenePaths[item]);
 	}
 	selectedObject = nullptr;
 	currentScene = scenes[item];
@@ -307,9 +321,10 @@ void HelloGL::KeyboardSpecialUp(int key, int x, int y)
 
 void HelloGL::Mouse(int button, int state, int x, int y)
 {
+	InputManager::OnMouseEvent(button, state);
+
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) 
 	{
-		isRightClickDown = true;
 		ShowCursor(FALSE);
 		glutSetCursor(GLUT_CURSOR_NONE);
 		lockedMousePosition.x = x + glutGet(GLUT_WINDOW_X);
@@ -317,7 +332,6 @@ void HelloGL::Mouse(int button, int state, int x, int y)
 	}
 	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP) 
 	{
-		isRightClickDown = false;
 		ShowCursor(TRUE);
 		glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
 	}
@@ -330,7 +344,7 @@ void HelloGL::Mouse(int button, int state, int x, int y)
 
 void HelloGL::Motion(int x, int y)
 {
-	if (isRightClickDown)
+	if (InputManager::IsMouseButtonDown(GLUT_RIGHT_BUTTON))
 	{
 		glm::vec3 currentMousePosition = glm::vec3(x + glutGet(GLUT_WINDOW_X), y + glutGet(GLUT_WINDOW_Y), 0);
 		glm::vec3 mouseOffset = currentMousePosition - lockedMousePosition;
@@ -343,86 +357,29 @@ void HelloGL::Motion(int x, int y)
 
 void HelloGL::InitObjects()
 {
-	scenes.resize(3);
-	scenes[0] = new Scene("Scenes/scene1.xml");
-	currentScene = scenes[0];
+	camera = new Camera();
 
-	camera = new Camera(currentScene->GetCameraPosition(), currentScene->GetCameraRotation());
-	glClearColor(0.25098f, 0.67058f, 0.93725f, 1.0);
+	scenes.resize(sceneNames.size());
+	SceneMenu(0);
 
 	Mesh* skyboxMesh = MeshLoader::Load("Models/skybox.obj");
 	Texture2D* skyboxTexture = new Texture2D();
 	skyboxTexture->LoadBMP("Textures/blue-sky.bmp");
 	skybox = new SceneObject(skyboxMesh, skyboxTexture, camera->GetPosition());
-	skybox->SetScale(glm::vec3(2.0f, 2.0f, 2.0f));
 
-	//camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-	/*Texture2D* texture = new Texture2D();
-	texture->LoadRAW("penguins.raw", 512, 512);*/
-	//texture->LoadTGA("cat.tga");
-
-	/*Texture2D* texture2 = new Texture2D();
-	texture2->LoadBMP("funnycat.bmp");
-
-	Texture2D* texture3 = new Texture2D();
-	texture3->LoadBMP("transparent-cat.bmp");*/
-
-	/*Texture2D* texture4 = new Texture2D();
-	texture4->LoadPNG("small-test.png");*/
-
-	//Mesh* cubeMesh = MeshLoader::Load("cube.txt");
-	//Mesh* pyramidMesh = MeshLoader::LoadTXT("pyramid.txt");
-	/*Mesh* teapotMesh = MeshLoader::LoadOBJ("teapot.obj");*/
-	//Mesh* cowMesh = MeshLoader::Load("cow.obj");
-
-	objects = std::vector<SceneObject*>();
-	/*for (int i = 0; i < 20; i++)
-	{
-		objects.push_back(new Cube(cubeMesh, texture, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f));
-	}*/
-	/*for (int i = 0; i < objectCount / 4; i++)
-	{
-		objects[i] = new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
-	}
-	for (int i = objectCount / 4; i < objectCount / 2; i++)
-	{
-		objects[i] = new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
-	}
-	for (int i = objectCount / 2; i < objectCount; i++)
-	{
-		objects[i] = new Cube(cubeMesh, texture2, ((rand() % 400) / 10.0f) - 20.0f, ((rand() % 200) / 10.0f) - 10.0f, -(rand() % 1000) / 5.0f, rand() % 360);
-	}*/
-
-	row1Rotation = 0.0f;
-	row2Rotation = 0.0f;
-	row3Rotation = 0.0f;
-	scale = 0.0f;
+	/*Mesh* cubeMesh = MeshLoader::Load("Models/cube.txt");
+	Texture2D* pngTexture = new Texture2D();
+	pngTexture->LoadPNG("Textures/new-cat.png");
+	testObject = new SceneObject(cubeMesh, pngTexture, glm::vec3(0, 10, 0));*/
 }
 
 void HelloGL::InitLighting()
 {
-	lightPosition = new glm::vec4();
-	lightPosition->x = 5.0f;
-	lightPosition->y = 1.0f;
-	lightPosition->z = 5.0f;
-	lightPosition->w = 0.0f;
+	lightPosition = glm::vec4(5.0f, 1.0f, 5.0f, 0.0f);
 
-	lightData = new Lighting();
-	lightData->Ambient.x = 0.2f;
-	lightData->Ambient.y = 0.2f;
-	lightData->Ambient.z = 0.2f;
-	lightData->Ambient.w = 1.0f;
-
-	lightData->Diffuse.x = 1.0f;
-	lightData->Diffuse.y = 1.0f;
-	lightData->Diffuse.z = 1.0f;
-	lightData->Diffuse.w = 1.0f;
-
-	lightData->Specular.x = 0.0f;
-	lightData->Specular.y = 0.0f;
-	lightData->Specular.z = 0.0f;
-	lightData->Specular.w = 1.0f;
+	lightData.Ambient = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+	lightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	lightData.Specular = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void HelloGL::InitGL(int argc, char* argv[])
@@ -442,13 +399,14 @@ void HelloGL::InitGL(int argc, char* argv[])
 	glutSpecialUpFunc(GLUTCallbacks::KeyboardSpecialUp);
 	glutMouseFunc(GLUTCallbacks::Mouse);
 	glutMotionFunc(GLUTCallbacks::Motion);
+	glutCloseFunc(CloseCallback);
 
+	// create scene menu
 	glutCreateMenu(GLUTCallbacks::SceneMenu);
-
-	// Add menu items
-	glutAddMenuEntry("Scene 1", 0);
-	glutAddMenuEntry("Scene 2", 1);
-	glutAddMenuEntry("Scene 3", 2);
+	for (int i = 0; i < sceneNames.size(); i++)
+	{
+		glutAddMenuEntry(sceneNames[i], i);
+	}
 
 	// Associate a mouse button with menu
 	glutAttachMenu(GLUT_MIDDLE_BUTTON);
@@ -477,7 +435,8 @@ int main(int argc, char* argv[])
 {
 	srand(time(NULL));
 
-	HelloGL* game = new HelloGL(argc, argv);
+	g_game = new HelloGL(argc, argv);
+	glutMainLoop();
 
 	return 0;
 }

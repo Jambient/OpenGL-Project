@@ -26,7 +26,7 @@ private:
 	glm::vec3 m_orbitTargetPosition = glm::vec3();
 	float m_orbitDistance = 10.0f;
 public:
-	Camera(glm::vec3 position, glm::vec3 rotation);
+	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f));
 
 	glm::vec3 GetPosition() const { return m_position; }
 	glm::vec3 GetForwardVector() { return RotateVector(glm::vec3(0.0f, 0.0f, 1.0f), m_rotation); }

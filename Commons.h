@@ -6,15 +6,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <vector>
 #include <map>
 #include <array>
 
 // definitions
-#ifndef M_PI
 #define M_PI 3.14159265358979323846
-#endif
+#define VIEWPORT_WIDTH 800
+#define VIEWPORT_HEIGHT 800
 
 // structures
 struct Color
@@ -32,19 +33,13 @@ struct TexCoord
 	GLfloat u, v;
 };
 
-struct MultiIndex
-{
-	GLshort verticesIndex;
-	GLshort texCoordsIndex;
-	GLshort normalsIndex;
-};
-
 struct Lighting
 {
 	glm::vec4 Ambient;
 	glm::vec4 Diffuse;
 	glm::vec4 Specular;
 };
+
 struct Material
 {
 	glm::vec4 Ambient;
@@ -61,7 +56,6 @@ struct Mesh
 	std::vector<GLushort>* Indices;
 	std::map<std::string, Material> Materials;
 	std::map<std::array<GLuint, 2>, std::string> MaterialUsage;
-	int VertexCount, TexCoordCount, NormalCount, IndexCount;
 };
 
 // classes
