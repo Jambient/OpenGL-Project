@@ -41,6 +41,7 @@ public:
 
 	glm::vec3 GetClosestAxisAlignedVector(glm::vec3 vec);
 
+	void BaseMenu(int item);
 	void SceneMenu(int item);
 
 private:

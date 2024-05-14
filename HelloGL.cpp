@@ -83,7 +83,7 @@ void HelloGL::Display()
 
 	// display the current camera mode
 	std::string cameraModeText = "Camera Mode: ";
-	cameraModeText += (camera->GetViewMode() == ViewMode::FLY) ? "FLY" : "ORBIT";
+	cameraModeText += camera->GetViewModeAsString();
 	RenderText(cameraModeText.c_str(), {VIEWPORT_WIDTH / 2 - 80, 30});
 
 	// update orbit target position if an object is selected.
@@ -282,6 +282,11 @@ void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, con
 	glEnable(GL_LIGHTING);
 }
 
+void HelloGL::BaseMenu(int item)
+{
+
+}
+
 void HelloGL::SceneMenu(int item)
 {
 	if (scenes[item] == nullptr)
@@ -300,8 +305,23 @@ void HelloGL::KeyboardDown(unsigned char key, int x, int y)
 {
 	InputManager::OnKeyboardDown(key);
 
-	if (key == 'f' && selectedObject != nullptr)
-		camera->SetViewMode(camera->GetViewMode() == ViewMode::FLY ? ViewMode::ORBIT : ViewMode::FLY);
+	if (key == 'v')
+	{
+		switch (camera->GetViewMode())
+		{
+		case ViewMode::FLY:
+			if (selectedObject != nullptr) { camera->SetViewMode(ViewMode::LOCK); }
+			break;
+		case ViewMode::LOCK:
+			if (selectedObject != nullptr) { camera->SetViewMode(ViewMode::ORBIT); }
+			break;
+		case ViewMode::ORBIT:
+			camera->SetViewMode(ViewMode::FLY);
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 void HelloGL::KeyboardUp(unsigned char key, int x, int y)
@@ -402,11 +422,15 @@ void HelloGL::InitGL(int argc, char* argv[])
 	glutCloseFunc(CloseCallback);
 
 	// create scene menu
-	glutCreateMenu(GLUTCallbacks::SceneMenu);
+	int sceneMenu = glutCreateMenu(GLUTCallbacks::SceneMenu);
 	for (int i = 0; i < sceneNames.size(); i++)
 	{
 		glutAddMenuEntry(sceneNames[i], i);
 	}
+
+	// create base menu
+	glutCreateMenu(GLUTCallbacks::BaseMenu);
+	glutAddSubMenu("Change Scene", sceneMenu);
 
 	// Associate a mouse button with menu
 	glutAttachMenu(GLUT_MIDDLE_BUTTON);

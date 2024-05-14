@@ -9,22 +9,17 @@
 #include "GLUTCallbacks.h"
 #include "Commons.h"
 #include <algorithm>
+#include <map>
 
 enum class ViewMode
 {
 	FLY,
+	LOCK,
 	ORBIT
 };
 
 class Camera
 {
-private:
-	glm::vec3 m_position;
-	glm::vec3 m_rotation;
-
-	ViewMode m_viewMode = ViewMode::FLY;
-	glm::vec3 m_orbitTargetPosition = glm::vec3();
-	float m_orbitDistance = 10.0f;
 public:
 	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -34,6 +29,7 @@ public:
 	glm::vec3 GetRightVector();
 
 	ViewMode GetViewMode() const { return m_viewMode; }
+	std::string GetViewModeAsString() const { return m_viewModeToString[m_viewMode]; }
 	void SetViewMode(ViewMode mode) { m_viewMode = mode; };
 	void SetOrbitTargetPosition(glm::vec3 target) { m_orbitTargetPosition = target; }
 	void SetOrbitDistance(float distance) { m_orbitDistance = distance; }
@@ -45,4 +41,15 @@ public:
 	void OffsetRotation(glm::vec3 offset) { m_rotation += offset; m_rotation.x = std::min(std::max(m_rotation.x, -89.0f), 89.0f); }
 
 	void Update(glm::mat4& viewMatrix);
+
+private:
+	glm::vec3 m_position;
+	glm::vec3 m_rotation;
+
+	ViewMode m_viewMode = ViewMode::FLY;
+	static std::map<ViewMode, std::string> m_viewModeToString;
+
+	glm::vec3 m_orbitTargetPosition = glm::vec3();
+	float m_orbitDistance = 10.0f;
+
 };

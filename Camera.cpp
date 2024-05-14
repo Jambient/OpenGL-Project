@@ -2,6 +2,12 @@
 #include "Commons.h"
 #include <iostream>
 
+std::map<ViewMode, std::string> Camera::m_viewModeToString = {
+	{ViewMode::FLY, "FLY"},
+	{ViewMode::LOCK, "LOCK"},
+	{ViewMode::ORBIT, "ORBIT"}
+};
+
 Camera::Camera(glm::vec3 position, glm::vec3 rotation)
 {
 	m_position = position;
@@ -25,6 +31,11 @@ void Camera::Update(glm::mat4& viewMatrix)
 		glm::vec3 center = m_position + lookVector;
 		gluLookAt(m_position.x, m_position.y, m_position.z, center.x, center.y, center.z, upVector.x, upVector.y, upVector.z);
 		viewMatrix = glm::lookAt(m_position, center, upVector);
+		break;
+	case ViewMode::LOCK:
+		glm::vec3 newLook = m_position + glm::normalize((m_orbitTargetPosition - m_position));
+		gluLookAt(m_position.x, m_position.y, m_position.z, newLook.x, newLook.y, newLook.z, upVector.x, upVector.y, upVector.z);
+		viewMatrix = glm::lookAt(m_position, newLook, upVector);
 		break;
 	case ViewMode::ORBIT:
 		m_position = m_orbitTargetPosition - lookVector * m_orbitDistance;
