@@ -98,8 +98,7 @@ void Scene::BuildSceneTreeRecursively(TreeNode* parentNode, pugi::xml_node xmlNo
 		}
 		else if (objectType == "cube")
 		{
-			Mesh* cubeMesh = MeshLoader::Load("Models/cube.txt");
-			childNode->object = new Cube(cubeMesh, texture, position, 0.0f);
+			childNode->object = new Cube(texture, position, 0.0f);
 			childNode->object->SetRotation(rotation);
 			childNode->object->SetScale(scale);
 		}

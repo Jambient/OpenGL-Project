@@ -71,7 +71,7 @@ namespace MeshLoader
 			{
 				Vertex vertex;
 				inFile >> vertex.x >> vertex.y >> vertex.z;
-				mesh.Vertices->push_back(vertex);
+				mesh.vertices.push_back(vertex);
 			}
 		}
 
@@ -84,7 +84,7 @@ namespace MeshLoader
 			{
 				Vertex vector;
 				inFile >> vector.x >> vector.y >> vector.z;
-				mesh.Normals->push_back(vector);
+				mesh.normals.push_back(vector);
 			}
 		}
 
@@ -97,7 +97,7 @@ namespace MeshLoader
 			{
 				TexCoord texCoord;
 				inFile >> texCoord.u >> texCoord.v;
-				mesh.TexCoords->push_back(texCoord);
+				mesh.texCoords.push_back(texCoord);
 			}
 		}
 
@@ -110,9 +110,9 @@ namespace MeshLoader
 			{
 				GLushort i1, i2, i3;
 				inFile >> i1 >> i2 >> i3;
-				mesh.Indices->push_back(i1);
-				mesh.Indices->push_back(i2);
-				mesh.Indices->push_back(i3);
+				mesh.indices.push_back(i1);
+				mesh.indices.push_back(i2);
+				mesh.indices.push_back(i3);
 			}
 		}
 
@@ -128,20 +128,10 @@ namespace MeshLoader
 				return nullptr;
 			}
 
-			mesh->Vertices = new std::vector<Vertex>();
-			mesh->Indices = new std::vector<GLushort>();
-			mesh->Normals = new std::vector<Vertex>();
-			mesh->TexCoords = new std::vector<TexCoord>();
-
 			LoadVertices(inFile, *mesh);
 			LoadTexCoords(inFile, *mesh);
 			LoadNormals(inFile, *mesh);
 			LoadIndices(inFile, *mesh);
-
-			mesh->Vertices->shrink_to_fit();
-			mesh->Normals->shrink_to_fit();
-			mesh->Indices->shrink_to_fit();
-			mesh->TexCoords->shrink_to_fit();
 
 			inFile.close();
 
@@ -180,21 +170,24 @@ namespace MeshLoader
 					currentMaterialData = new Material();
 					currentMaterialName = data[0];
 				}
-				else if (type == "Ns")
+				if (currentMaterialData != nullptr)
 				{
-					currentMaterialData->Shininess = stof(data[0]);
-				}
-				else if (type == "Ka")
-				{
-					currentMaterialData->Ambient = glm::vec4(stof(data[0]), stof(data[1]), stof(data[2]), 1.0f);
-				}
-				else if (type == "Kd")
-				{
-					currentMaterialData->Diffuse = glm::vec4(stof(data[0]), stof(data[1]), stof(data[2]), 1.0f);
-				}
-				else if (type == "Ks")
-				{
-					currentMaterialData->Specular = glm::vec4(stof(data[0]), stof(data[1]), stof(data[2]), 1.0f);
+					if (type == "Ns")
+					{
+						currentMaterialData->shininess = stof(data[0]);
+					}
+					else if (type == "Ka")
+					{
+						currentMaterialData->ambient = glm::vec4(stof(data[0]), stof(data[1]), stof(data[2]), 1.0f);
+					}
+					else if (type == "Kd")
+					{
+						currentMaterialData->diffuse = glm::vec4(stof(data[0]), stof(data[1]), stof(data[2]), 1.0f);
+					}
+					else if (type == "Ks")
+					{
+						currentMaterialData->specular = glm::vec4(stof(data[0]), stof(data[1]), stof(data[2]), 1.0f);
+					}
 				}
 			}
 
@@ -259,15 +252,15 @@ namespace MeshLoader
 						MultiIndex multiIndex = {-1, -1, -1};
 						if (indices.size() >= 1) // only vertex indices
 						{
-							multiIndex.verticesIndex = stof(indices[0]) - 1.0f;
+							multiIndex.verticesIndex = (GLshort)stof(indices[0]) - 1;
 						}
 						if (indices.size() >= 2 && indices[1].size() > 0) // vertex + texture coordinate indices
 						{
-							multiIndex.texCoordsIndex = stof(indices[1]) - 1.0f;
+							multiIndex.texCoordsIndex = (GLshort)stof(indices[1]) - 1;
 						}
 						if (indices.size() == 3) // vertex, texture coordinate (optional), normal indices
 						{
-							multiIndex.normalsIndex = stof(indices[2]) - 1.0f;
+							multiIndex.normalsIndex = (GLshort)stof(indices[2]) - 1;
 						}
 
 						tempIndices.push_back(multiIndex);
@@ -282,7 +275,7 @@ namespace MeshLoader
 					if (directoryPos != string::npos)
 						mtlPath = pathStr.substr(0, directoryPos + 1) + mtlPath;
 
-					mesh->Materials = loadMTL(mtlPath.c_str());
+					mesh->materials = loadMTL(mtlPath.c_str());
 				}
 				else if (type == "usemtl")
 				{
@@ -290,8 +283,7 @@ namespace MeshLoader
 					if (materialName.size() > 0)
 					{
 						array<GLuint, 2> usageIndexes = { (GLuint)materialUsageStart, (GLuint)lastFaceIndex };
-						//mesh->MaterialUsage->insert(pair<array<GLuint, 2>, string>(usageIndexes, materialName));
-						mesh->MaterialUsage[usageIndexes] = materialName;
+						mesh->materialUsage[usageIndexes] = materialName;
 					}
 
 					materialUsageStart = lastFaceIndex + 1;
@@ -301,15 +293,11 @@ namespace MeshLoader
 			if (materialName.size() > 0)
 			{
 				array<GLuint, 2> usageIndexes = { (GLuint)materialUsageStart, (GLuint)lastFaceIndex };
-				mesh->MaterialUsage[usageIndexes] = materialName;
+				mesh->materialUsage[usageIndexes] = materialName;
 			}
 
 			inFile.close();
 
-			mesh->Vertices = new vector<Vertex>();
-			mesh->Indices = new vector<GLushort>();
-			mesh->Normals = new vector<Vertex>();
-			mesh->TexCoords = new vector<TexCoord>();
 			Vertex defaultNormal = { 0.0f, 1.0f, 0.0f };
 			TexCoord defaultTexCoord = { 0.0f, 0.0f };
 
@@ -325,21 +313,21 @@ namespace MeshLoader
 				auto it = indexMap.find(key);
 				if (it == indexMap.end()) // index not found
 				{
-					mesh->Indices->push_back(currentIndex);
+					mesh->indices.push_back(currentIndex);
 					indexMap[key] = currentIndex;
 
-					mesh->Vertices->push_back(tempVertices[multiIndex.verticesIndex]);
+					mesh->vertices.push_back(tempVertices[multiIndex.verticesIndex]);
 
 					if (multiIndex.normalsIndex >= 0)
-						mesh->Normals->push_back(tempNormals[multiIndex.normalsIndex]);
+						mesh->normals.push_back(tempNormals[multiIndex.normalsIndex]);
 					if (multiIndex.texCoordsIndex >= 0)
-						mesh->TexCoords->push_back(tempTexCoords[multiIndex.texCoordsIndex]);
+						mesh->texCoords.push_back(tempTexCoords[multiIndex.texCoordsIndex]);
 
 					currentIndex++;
 				}
 				else
 				{
-					mesh->Indices->push_back(it->second);
+					mesh->indices.push_back(it->second);
 				}
 			}
 

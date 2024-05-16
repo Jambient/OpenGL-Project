@@ -75,6 +75,14 @@
 					</animation>
 				</properties>
 			</obj>
+			<cube name="Funny Cube">
+				<properties>
+					<transform>
+						<position x="0" y="15" z="0" />
+					</transform>
+				</properties>
+				<texture path="Textures/funnycat.bmp" />
+			</cube>
 		</cube>
 	</objects>
 </scene>

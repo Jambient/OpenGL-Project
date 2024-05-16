@@ -20,42 +20,42 @@
 // structures
 struct Color
 {
-	GLfloat r, g, b;
+	GLfloat r, g, b = 0.0f;
 };
 
 struct Vertex
 {
-	GLfloat x, y, z;
+	GLfloat x, y, z = 0.0f;
 };
 
 struct TexCoord
 {
-	GLfloat u, v;
+	GLfloat u, v = 0.0f;
 };
 
 struct Lighting
 {
-	glm::vec4 Ambient;
-	glm::vec4 Diffuse;
-	glm::vec4 Specular;
+	glm::vec4 ambient;
+	glm::vec4 diffuse;
+	glm::vec4 specular;
 };
 
 struct Material
 {
-	glm::vec4 Ambient;
-	glm::vec4 Diffuse;
-	glm::vec4 Specular;
-	GLfloat Shininess;
+	glm::vec4 ambient;
+	glm::vec4 diffuse;
+	glm::vec4 specular;
+	GLfloat shininess;
 };
 
 struct Mesh
 {
-	std::vector<Vertex>* Vertices;
-	std::vector<TexCoord>* TexCoords;
-	std::vector<Vertex>* Normals;
-	std::vector<GLushort>* Indices;
-	std::map<std::string, Material> Materials;
-	std::map<std::array<GLuint, 2>, std::string> MaterialUsage;
+	std::vector<Vertex> vertices;
+	std::vector<TexCoord> texCoords;
+	std::vector<Vertex> normals;
+	std::vector<GLushort> indices;
+	std::map<std::string, Material> materials;
+	std::map<std::array<GLuint, 2>, std::string> materialUsage;
 };
 
 // classes

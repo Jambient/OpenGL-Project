@@ -26,7 +26,7 @@ HelloGL::~HelloGL(void)
 	delete camera;
 	delete skybox;
 
-	for (int i = 0; i < scenes.size(); i++)
+	for (unsigned int i = 0; i < scenes.size(); i++)
 	{
 		delete scenes[i];
 	}
@@ -122,14 +122,14 @@ void HelloGL::Update()
 	glLoadIdentity();
 
 	// calculate delta time and update fps
-	float currentTime = glutGet(GLUT_ELAPSED_TIME);
+	int currentTime = glutGet(GLUT_ELAPSED_TIME);
 	float deltaTime = (currentTime - previousElapsedTime) / 1000.0f;
-	fps = 1.0f / deltaTime;
+	fps = (int)(1.0f / deltaTime);
 
 	// update lighting
-	glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(lightData.Ambient));
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(lightData.Diffuse));
-	glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(lightData.Specular));
+	glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(lightData.ambient));
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(lightData.diffuse));
+	glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(lightData.specular));
 	glLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(lightPosition));
 
 	// update all animations
@@ -282,13 +282,11 @@ void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, con
 	glEnable(GL_LIGHTING);
 }
 
-void HelloGL::BaseMenu(int item)
-{
-
-}
+void HelloGL::BaseMenu(int item){}
 
 void HelloGL::SceneMenu(int item)
 {
+	// chosen scene has not been loaded before then load it
 	if (scenes[item] == nullptr)
 	{
 		scenes[item] = new Scene(scenePaths[item]);
@@ -296,6 +294,7 @@ void HelloGL::SceneMenu(int item)
 	selectedObject = nullptr;
 	currentScene = scenes[item];
 
+	// reset and update camera
 	camera->SetViewMode(ViewMode::FLY);
 	camera->SetPosition(currentScene->GetCameraPosition());
 	camera->SetRotation(currentScene->GetCameraRotation());
@@ -305,6 +304,7 @@ void HelloGL::KeyboardDown(unsigned char key, int x, int y)
 {
 	InputManager::OnKeyboardDown(key);
 
+	// key for switching camera modes
 	if (key == 'v')
 	{
 		switch (camera->GetViewMode())
@@ -343,6 +343,7 @@ void HelloGL::Mouse(int button, int state, int x, int y)
 {
 	InputManager::OnMouseEvent(button, state);
 
+	// if right button is down then hide the cursor and save its position
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) 
 	{
 		ShowCursor(FALSE);
@@ -350,12 +351,14 @@ void HelloGL::Mouse(int button, int state, int x, int y)
 		lockedMousePosition.x = x + glutGet(GLUT_WINDOW_X);
 		lockedMousePosition.y = y + glutGet(GLUT_WINDOW_Y);
 	}
+	// if the right button is up then show the cursor again
 	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP) 
 	{
 		ShowCursor(TRUE);
 		glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
 	}
 
+	// if the left button is clicked, then raycast
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
 		Raycast(x, y);
@@ -364,24 +367,29 @@ void HelloGL::Mouse(int button, int state, int x, int y)
 
 void HelloGL::Motion(int x, int y)
 {
+	// when the right mouse button is down, rotate the camera based on mouse movement
 	if (InputManager::IsMouseButtonDown(GLUT_RIGHT_BUTTON))
 	{
-		glm::vec3 currentMousePosition = glm::vec3(x + glutGet(GLUT_WINDOW_X), y + glutGet(GLUT_WINDOW_Y), 0);
-		glm::vec3 mouseOffset = currentMousePosition - lockedMousePosition;
+		glm::ivec2 currentMousePosition = glm::vec2(x + glutGet(GLUT_WINDOW_X), y + glutGet(GLUT_WINDOW_Y));
+		glm::ivec2 mouseOffset = currentMousePosition - lockedMousePosition;
 
 		camera->OffsetRotation(glm::vec3(mouseOffset.y, -mouseOffset.x, 0.0f) * 0.01f);
 
+		// relock the cursor
 		SetCursorPos(lockedMousePosition.x, lockedMousePosition.y);
 	}
 }
 
 void HelloGL::InitObjects()
 {
+	// initialise the camera
 	camera = new Camera();
 
+	// set up the first scene
 	scenes.resize(sceneNames.size());
 	SceneMenu(0);
 
+	// load the skybox
 	Mesh* skyboxMesh = MeshLoader::Load("Models/skybox.obj");
 	Texture2D* skyboxTexture = new Texture2D();
 	skyboxTexture->LoadBMP("Textures/blue-sky.bmp");
@@ -397,14 +405,13 @@ void HelloGL::InitLighting()
 {
 	lightPosition = glm::vec4(5.0f, 1.0f, 5.0f, 0.0f);
 
-	lightData.Ambient = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-	lightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	lightData.Specular = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	lightData.ambient = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+	lightData.diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	lightData.specular = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void HelloGL::InitGL(int argc, char* argv[])
 {
-
 	GLUTCallbacks::Init(this);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
@@ -423,7 +430,7 @@ void HelloGL::InitGL(int argc, char* argv[])
 
 	// create scene menu
 	int sceneMenu = glutCreateMenu(GLUTCallbacks::SceneMenu);
-	for (int i = 0; i < sceneNames.size(); i++)
+	for (unsigned int i = 0; i < sceneNames.size(); i++)
 	{
 		glutAddMenuEntry(sceneNames[i], i);
 	}
@@ -457,7 +464,7 @@ void HelloGL::InitGL(int argc, char* argv[])
 
 int main(int argc, char* argv[]) 
 {
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 
 	g_game = new HelloGL(argc, argv);
 	glutMainLoop();

@@ -4,57 +4,57 @@
 // functions are from https://easings.net/
 namespace EasingFunctions
 {
-    float Linear(float t)
+    double Linear(double t)
     {
         return t;
     }
 
-    float Sine(float t)
+    double Sine(double t)
     {
         return 1 - cos((t * M_PI) / 2);
     }
 
-    float Quad(float t)
+    double Quad(double t)
     {
         return t * t;
     }
 
-    float Cubic(float t)
+    double Cubic(double t)
     {
         return t * t * t;
     }
 
-    float Quart(float t)
+    double Quart(double t)
     {
         return t * t * t * t;
     }
 
-    float Quint(float t)
+    double Quint(double t)
     {
         return t * t * t * t * t;
     }
 
-    float Exponential(float t)
+    double Exponential(double t)
     {
         return t == 0.0f ? 0.0f : std::pow(2, 10 * t - 10);
     }
 
-    float Circular(float t)
+    double Circular(double t)
     {
         return 1 - std::sqrt(1 - std::pow(t, 2));
     }
 
-    float Back(float t)
+    double Back(double t)
     {
-        const float c1 = 1.70158f;
-        const float c3 = c1 + 1.0f;
+        const double c1 = 1.70158;
+        const double c3 = c1 + 1.0;
 
         return c3 * t * t * t - c1 * t * t;
     }
 
-    float Elastic(float t)
+    double Elastic(double t)
     {
-        const float c4 = (2 * M_PI) / 3;
+        const double c4 = (2 * M_PI) / 3;
         return t == 0
             ? 0
             : t == 1
@@ -62,11 +62,11 @@ namespace EasingFunctions
             : -std::pow(2, 10 * t - 10) * std::sin((t * 10 - 10.75) * c4);
     }
 
-    float Bounce(float t)
+    double Bounce(double t)
     {
         t = 1.0f - t;
-        const float n1 = 7.5625f;
-        const float d1 = 2.75f;
+        const double n1 = 7.5625f;
+        const double d1 = 2.75f;
 
         if (t < 1 / d1) {
             t = n1 * t * t;
@@ -81,7 +81,7 @@ namespace EasingFunctions
             t = n1 * (t -= 2.625 / d1) * t + 0.984375;
         }
 
-        return 1.0f - t;
+        return 1.0 - t;
     }
 }
 
@@ -146,8 +146,8 @@ void Animation::Update(float deltaTime)
     }
 
     // get current keyframe set
-    Keyframe currentKeyframe, previousKeyframe;
-    for (int i = 1; i < m_keyframes.size(); i++)
+    Keyframe currentKeyframe, previousKeyframe = { 0.0f, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f) };
+    for (unsigned int i = 1; i < m_keyframes.size(); i++)
     {
         if (m_elapsedTime <= m_keyframes[i].time)
         {
@@ -158,7 +158,7 @@ void Animation::Update(float deltaTime)
     }
 
     // calculate t and modify using easing direction
-    float t = (m_elapsedTime - previousKeyframe.time) / (currentKeyframe.time - previousKeyframe.time);
+    double t = (m_elapsedTime - previousKeyframe.time) / (currentKeyframe.time - previousKeyframe.time);
 
     if(m_easingDirection == EasingDirection::In)
     {
@@ -166,14 +166,14 @@ void Animation::Update(float deltaTime)
     }
     else if (m_easingDirection == EasingDirection::Out)
     {
-        t = 1.0f - styleToFunction[m_easingStyle](1.0f - t);
+        t = 1.0 - styleToFunction[m_easingStyle](1.0f - t);
     }
     else if (m_easingDirection == EasingDirection::InOut)
     {
-        if (t <= 0.5f)
-            t = styleToFunction[m_easingStyle](t * 2) * 0.5f;
+        if (t <= 0.5)
+            t = styleToFunction[m_easingStyle](t * 2) * 0.5;
         else
-            t = ( (1.0f - styleToFunction[m_easingStyle](1.0f - (t - 0.5f) * 2)) * 0.5f) + 0.5f;
+            t = ( (1.0 - styleToFunction[m_easingStyle](1.0 - (t - 0.5) * 2)) * 0.5) + 0.5;
     }
 
     // set new values for object

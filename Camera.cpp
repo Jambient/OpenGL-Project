@@ -25,6 +25,7 @@ void Camera::Update(glm::mat4& viewMatrix)
 	glm::vec3 lookVector = RotateVector(glm::vec3(0.0f, 0.0f, 1.0f), m_rotation);
 	glm::vec3 upVector = RotateVector(glm::vec3(0.0f, 1.0f, 0.0f), m_rotation);
 
+	// set gluLookAt based on view mode
 	switch (m_viewMode)
 	{
 	case ViewMode::FLY:

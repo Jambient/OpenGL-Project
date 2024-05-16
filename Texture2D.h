@@ -7,8 +7,8 @@
 class Texture2D
 {
 private:
-	GLuint _ID; // Texture ID
-	int _width, _height;
+	GLuint m_ID = 0; // Texture ID
+	int m_width, m_height = 0;
 
 public:
 	Texture2D();
@@ -19,9 +19,9 @@ public:
 	bool LoadBMP(const char* path);
 	bool LoadPNG(const char* path);
 
-	GLuint GetID() const { return _ID; }
-	int GetWidth() const { return _width; }
-	int GetHeight() const { return _height; }
+	GLuint GetID() const { return m_ID; }
+	int GetWidth() const { return m_width; }
+	int GetHeight() const { return m_height; }
 };
 
 struct PNGINFOHEADER
@@ -41,7 +41,7 @@ struct PNGFILEHEADER {
 
 struct ChunkData
 {
-	uint32_t length;
+	uint32_t length = 0;
 	std::string type;
 	std::vector<char> data;
 };

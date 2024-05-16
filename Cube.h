@@ -11,7 +11,5 @@
 class Cube : public SceneObject
 {
 public:
-	Cube(Mesh* mesh, Texture2D* texture, glm::vec3 position, float rotation = 0.0f);
-
-	void Update();
+	Cube(Texture2D* texture, glm::vec3 position, float rotation = 0.0f);
 };

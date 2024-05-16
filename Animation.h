@@ -7,7 +7,7 @@
 
 struct Keyframe
 {
-	float time;
+	float time = 0.0f;
 	glm::vec3 position;
 	glm::vec3 rotation;
 	glm::vec3 scale;
@@ -35,7 +35,7 @@ enum class EasingDirection
 	InOut
 };
 
-using EasingFunction = std::function<float(float)>;
+using EasingFunction = std::function<double(double)>;
 
 class SceneObject;
 

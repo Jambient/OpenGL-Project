@@ -9,9 +9,9 @@ glm::vec3 vertexToVector(Vertex vertex)
 
 void SceneObject::UpdateBoundingBox()
 {
-	m_bbox.bounds[0] = m_bbox.bounds[1] = RotateVector(vertexToVector((*m_mesh->Vertices)[0]) * m_scale, m_rotation);
+	m_bbox.bounds[0] = m_bbox.bounds[1] = RotateVector(vertexToVector((m_mesh->vertices)[0]) * m_scale, m_rotation);
 
-	for (const Vertex& vertex : *m_mesh->Vertices)
+	for (const Vertex& vertex : m_mesh->vertices)
 	{
 		glm::vec3 scaledVertex = RotateVector(vertexToVector(vertex) * m_scale, m_rotation);
 		m_bbox.bounds[0] = glm::min(m_bbox.bounds[0], scaledVertex);
@@ -31,13 +31,13 @@ SceneObject::SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position)
 	m_scale = glm::vec3(1, 1, 1);
 
 	m_material = new Material();
-	m_material->Ambient.x = 1.0f; m_material->Ambient.y = 1.0f; m_material->Ambient.z = 1.0f;
-	m_material->Ambient.w = 1.0f;
-	m_material->Diffuse.x = 1.0f; m_material->Diffuse.y = 1.0f; m_material->Diffuse.z = 1.0f;
-	m_material->Diffuse.w = 1.0f;
-	m_material->Specular.x = 0.0f; m_material->Specular.y = 0.0f; m_material->Specular.z = 0.0f;
-	m_material->Specular.w = 1.0f;
-	m_material->Shininess = 250.0f;
+	m_material->ambient.x = 1.0f; m_material->ambient.y = 1.0f; m_material->ambient.z = 1.0f;
+	m_material->ambient.w = 1.0f;
+	m_material->diffuse.x = 1.0f; m_material->diffuse.y = 1.0f; m_material->diffuse.z = 1.0f;
+	m_material->diffuse.w = 1.0f;
+	m_material->specular.x = 0.0f; m_material->specular.y = 0.0f; m_material->specular.z = 0.0f;
+	m_material->specular.w = 1.0f;
+	m_material->shininess = 250.0f;
 
 	UpdateBoundingBox();
 }
@@ -57,9 +57,9 @@ void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, G
 
 void SceneObject::Draw(bool drawBoundingBox, glm::vec3 positionOffset)
 {
-	if (m_mesh->Vertices != nullptr && m_mesh->Normals != nullptr && m_mesh->Indices != nullptr && m_mesh->TexCoords != nullptr)
+	if (m_mesh->vertices.size() > 0 && m_mesh->indices.size() > 0)
 	{
-		bool hasTexCoords = m_mesh->TexCoords->size() > 0;
+		bool hasTexCoords = m_mesh->texCoords.size() > 0;
 
 		if (hasTexCoords)
 			glBindTexture(GL_TEXTURE_2D, m_texture->GetID());
@@ -69,10 +69,10 @@ void SceneObject::Draw(bool drawBoundingBox, glm::vec3 positionOffset)
 		if (hasTexCoords)
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-		glVertexPointer(3, GL_FLOAT, 0, m_mesh->Vertices->data());
-		glNormalPointer(GL_FLOAT, 0, m_mesh->Normals->data());
+		glVertexPointer(3, GL_FLOAT, 0, m_mesh->vertices.data());
+		glNormalPointer(GL_FLOAT, 0, m_mesh->normals.data());
 		if (hasTexCoords)
-			glTexCoordPointer(2, GL_FLOAT, 0, m_mesh->TexCoords->data());
+			glTexCoordPointer(2, GL_FLOAT, 0, m_mesh->texCoords.data());
 
 		glPushMatrix();
 		glTranslatef(m_position.x + positionOffset.x, m_position.y + positionOffset.y, m_position.z + positionOffset.z);
@@ -81,28 +81,28 @@ void SceneObject::Draw(bool drawBoundingBox, glm::vec3 positionOffset)
 		glRotatef(m_rotation.z, 0.0f, 0.0f, 1.0f);
 		glScalef(m_scale.x, m_scale.y, m_scale.z);
 
-		if (m_mesh->MaterialUsage.size() > 0)
+		if (m_mesh->materialUsage.size() > 0)
 		{
-			for (const auto& pair : m_mesh->MaterialUsage)
+			for (const auto& pair : m_mesh->materialUsage)
 			{
-				Material currentMat = m_mesh->Materials[pair.second];
+				Material currentMat = m_mesh->materials[pair.second];
 				// NEED TO UNDERSTAND STAND WHY SWAPPING THESE AROUND WORKED
-				glMaterialfv(GL_FRONT, GL_AMBIENT, &(currentMat.Diffuse.x));
-				glMaterialfv(GL_FRONT, GL_DIFFUSE, &(currentMat.Ambient.x));
-				glMaterialfv(GL_FRONT, GL_SPECULAR, &(currentMat.Specular.x));
-				glMaterialf(GL_FRONT, GL_SHININESS, currentMat.Shininess);
+				glMaterialfv(GL_FRONT, GL_AMBIENT, &(currentMat.diffuse.x));
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, &(currentMat.ambient.x));
+				glMaterialfv(GL_FRONT, GL_SPECULAR, &(currentMat.specular.x));
+				glMaterialf(GL_FRONT, GL_SHININESS, currentMat.shininess);
 
-				glDrawRangeElements(GL_TRIANGLES, pair.first[0], pair.first[1], m_mesh->Indices->size(), GL_UNSIGNED_SHORT, m_mesh->Indices);
+				glDrawRangeElements(GL_TRIANGLES, pair.first[0], pair.first[1], m_mesh->indices.size(), GL_UNSIGNED_SHORT, &m_mesh->indices);
 			}
 		}
 		else
 		{
-			glMaterialfv(GL_FRONT, GL_AMBIENT, &(m_material->Ambient.x));
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, &(m_material->Diffuse.x));
-			glMaterialfv(GL_FRONT, GL_SPECULAR, &(m_material->Specular.x));
-			glMaterialf(GL_FRONT, GL_SHININESS, m_material->Shininess);
+			glMaterialfv(GL_FRONT, GL_AMBIENT, &(m_material->ambient.x));
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, &(m_material->diffuse.x));
+			glMaterialfv(GL_FRONT, GL_SPECULAR, &(m_material->specular.x));
+			glMaterialf(GL_FRONT, GL_SHININESS, m_material->shininess);
 
-			glDrawElements(GL_TRIANGLES, m_mesh->Indices->size(), GL_UNSIGNED_SHORT, m_mesh->Indices->data());
+			glDrawElements(GL_TRIANGLES, m_mesh->indices.size(), GL_UNSIGNED_SHORT, m_mesh->indices.data());
 		}
 
 		glPopMatrix();

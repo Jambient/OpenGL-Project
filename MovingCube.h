@@ -10,8 +10,8 @@
 class MovingCube : public SceneObject
 {
 private:
-	glm::vec3 _position;
-	glm::vec3 _velocity;
+	glm::vec3 m_position;
+	glm::vec3 m_velocity;
 
 public:
 	MovingCube(Mesh* mesh, Texture2D* texture, glm::vec3 initialPosition, glm::vec3 velocity);

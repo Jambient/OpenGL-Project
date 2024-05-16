@@ -50,8 +50,8 @@ private:
 	TreeNode* selectedObject;
 	SceneObject* testObject;
 
-	glm::vec3 lastMousePosition;
-	glm::vec3 lockedMousePosition;
+	glm::ivec2 lastMousePosition;
+	glm::ivec2 lockedMousePosition;
 
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;

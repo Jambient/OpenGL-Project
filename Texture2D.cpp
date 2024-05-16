@@ -7,17 +7,22 @@
 
 using namespace std;
 
-Texture2D::Texture2D(){}
+Texture2D::Texture2D()
+{
+    m_ID = 0;
+    m_width = 0;
+    m_height = 0;
+}
 
 Texture2D::~Texture2D()
 {
-	glDeleteTextures(1, &_ID);
+	glDeleteTextures(1, &m_ID);
 }
 
 bool Texture2D::LoadRAW(const char* path, int width, int height)
 {
 	char* tempTextureData; int fileSize; ifstream inFile;
-	_width = width; _height = height;
+	m_width = width; m_height = height;
 	inFile.open(path, ios::binary);
 
 	if (!inFile.good())
@@ -35,8 +40,8 @@ bool Texture2D::LoadRAW(const char* path, int width, int height)
 
 	cout << path << " loaded." << endl;
 
-	glGenTextures(1, &_ID); // get next texture id
-	glBindTexture(GL_TEXTURE_2D, _ID); // bind the texture to the ID
+	glGenTextures(1, &m_ID); // get next texture id
+	glBindTexture(GL_TEXTURE_2D, m_ID); // bind the texture to the ID
 	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, tempTextureData);
 
 	delete[] tempTextureData;
@@ -71,8 +76,8 @@ bool Texture2D::LoadTGA(const char* path)
     inFile.close(); //Close the file
 
     type = tempHeaderData[2]; //Get TGA Type out of Header - Must be RGB for this to work
-    _width = ((unsigned char)tempHeaderData[13] << 8u) + (unsigned char)tempHeaderData[12]; // Find the width (Combines two bytes into a short)
-    _height = ((unsigned char)tempHeaderData[15] << 8u) + (unsigned char)tempHeaderData[14]; //Find the height
+    m_width = ((unsigned char)tempHeaderData[13] << 8u) + (unsigned char)tempHeaderData[12]; // Find the width (Combines two bytes into a short)
+    m_height = ((unsigned char)tempHeaderData[15] << 8u) + (unsigned char)tempHeaderData[14]; //Find the height
     pixelDepth = tempHeaderData[16]; // Find the pixel depth (24/32bpp)
 
     bool flipped = false;
@@ -84,18 +89,18 @@ bool Texture2D::LoadTGA(const char* path)
     {
         cout << path << " loaded." << endl;
 
-        glGenTextures(1, &_ID); //Get next Texture ID
-        glBindTexture(GL_TEXTURE_2D, _ID); //Bind the texture to the ID
+        glGenTextures(1, &m_ID); //Get next Texture ID
+        glBindTexture(GL_TEXTURE_2D, m_ID); //Bind the texture to the ID
 
         mode = pixelDepth / 8;
 
         //Note that TGA files are stored as BGR(A) - So we need to specify the format as GL_BGR(A)_EXT
         if (mode == 4)
             //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, tempTextureData);
-            gluBuild2DMipmaps(GL_TEXTURE_2D, 3, _width, _height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, tempTextureData);
+            gluBuild2DMipmaps(GL_TEXTURE_2D, 3, m_width, m_height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, tempTextureData);
         else
             //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
-            gluBuild2DMipmaps(GL_TEXTURE_2D, 3, _width, _height, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
+            gluBuild2DMipmaps(GL_TEXTURE_2D, 3, m_width, m_height, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
 
     }
 
@@ -134,8 +139,8 @@ bool Texture2D::LoadBMP(const char* path)
     inFile.read(tempTextureData, infoHeaderData.biSizeImage);
     inFile.close();
 
-    glGenTextures(1, &_ID); //Get next Texture ID
-    glBindTexture(GL_TEXTURE_2D, _ID); //Bind the texture to the ID
+    glGenTextures(1, &m_ID); //Get next Texture ID
+    glBindTexture(GL_TEXTURE_2D, m_ID); //Bind the texture to the ID
     GLint componentCount = infoHeaderData.biBitCount / 8;
     if (componentCount == 3)
         gluBuild2DMipmaps(GL_TEXTURE_2D, componentCount, infoHeaderData.biWidth, infoHeaderData.biHeight, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
@@ -335,8 +340,8 @@ bool Texture2D::LoadPNG(const char* path)
     cout << infoHeaderData.width << " : " << infoHeaderData.height << endl;
     cout << (int)infoHeaderData.bitDepth << " : " << (int)infoHeaderData.colorType << endl;
 
-    glGenTextures(1, &_ID);
-    glBindTexture(GL_TEXTURE_2D, _ID);
+    glGenTextures(1, &m_ID);
+    glBindTexture(GL_TEXTURE_2D, m_ID);
     gluBuild2DMipmaps(GL_TEXTURE_2D, 4, infoHeaderData.width, infoHeaderData.height, GL_RGBA, GL_UNSIGNED_BYTE, uncompressedData->data());
 
     delete[] compressed_data;
