@@ -3,7 +3,8 @@
 #include "Texture2D.h"
 #include <stdio.h>
 #include <algorithm>
-#include "inflatecpp/decompressor.h"
+#include <cstring>
+#include <zlib.h>
 
 using namespace std;
 
@@ -19,33 +20,53 @@ Texture2D::~Texture2D()
 	glDeleteTextures(1, &m_ID);
 }
 
-bool Texture2D::LoadRAW(const char* path, int width, int height)
+bool Texture2D::LoadRAW(const char* path)
 {
-	char* tempTextureData; int fileSize; ifstream inFile;
-	m_width = width; m_height = height;
-	inFile.open(path, ios::binary);
+    char* tempTextureData;
+    int fileSize;
+    std::ifstream inFile;
 
-	if (!inFile.good())
-	{
-		cerr << "Can't open texture file " << path << endl;
-		return false;
-	}
+    inFile.open(path, std::ios::binary);
 
-	inFile.seekg(0, ios::end);
-	fileSize = (int)inFile.tellg();
-	tempTextureData = new char[fileSize];
-	inFile.seekg(0, ios::beg);
-	inFile.read(tempTextureData, fileSize);
-	inFile.close();
+    if (!inFile.good())
+    {
+        std::cerr << "Can't open texture file " << path << std::endl;
+        return false;
+    }
 
-	cout << path << " loaded." << endl;
+    // get the files size
+    inFile.seekg(0, std::ios::end);
+    fileSize = static_cast<int>(inFile.tellg());
+    tempTextureData = new char[fileSize];
 
-	glGenTextures(1, &m_ID); // get next texture id
-	glBindTexture(GL_TEXTURE_2D, m_ID); // bind the texture to the ID
-	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, tempTextureData);
+    // read in all the file data
+    inFile.seekg(0, std::ios::beg);
+    inFile.read(tempTextureData, fileSize);
+    inFile.close();
 
-	delete[] tempTextureData;
-	return true;
+    std::cout << path << " loaded." << std::endl;
+
+    // calculate the total amount of pixels in the image.
+    const int bytesPerPixel = 3 * sizeof(unsigned char);
+    const int totalPixels = fileSize / bytesPerPixel;
+
+    // use that to work out the width and height assuming the image is square.
+    m_width = static_cast<int>(std::sqrt(totalPixels));
+    m_height = totalPixels / m_width;
+
+    if (m_width != m_height)
+    {
+        std::cerr << "Texture file is not square " << path << std::endl;
+        delete[] tempTextureData;
+        return false;
+    }
+
+    glGenTextures(1, &m_ID); // get next texture id
+    glBindTexture(GL_TEXTURE_2D, m_ID); // bind the texture to the ID
+    gluBuild2DMipmaps(GL_TEXTURE_2D, 3, m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, tempTextureData);
+
+    delete[] tempTextureData;
+    return true;
 }
 
 bool Texture2D::LoadTGA(const char* path)
@@ -96,10 +117,8 @@ bool Texture2D::LoadTGA(const char* path)
 
         //Note that TGA files are stored as BGR(A) - So we need to specify the format as GL_BGR(A)_EXT
         if (mode == 4)
-            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, tempTextureData);
             gluBuild2DMipmaps(GL_TEXTURE_2D, 3, m_width, m_height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, tempTextureData);
         else
-            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
             gluBuild2DMipmaps(GL_TEXTURE_2D, 3, m_width, m_height, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempTextureData);
 
     }
@@ -112,8 +131,8 @@ bool Texture2D::LoadTGA(const char* path)
 
 bool Texture2D::LoadBMP(const char* path)
 {
-    BITMAPFILEHEADER fileHeaderData;
-    BITMAPINFOHEADER infoHeaderData;
+    BITMAPFILEHEADER fileHeaderData = {0};
+    BITMAPINFOHEADER infoHeaderData = {0};
     char* tempTextureData;
 
     ifstream inFile;
@@ -124,6 +143,7 @@ bool Texture2D::LoadBMP(const char* path)
         return false;
     }
 
+    // read in the file header and info header
     inFile.seekg(0, ios::beg);
     inFile.read(reinterpret_cast<char*>(&fileHeaderData), sizeof(BITMAPFILEHEADER));
     inFile.read(reinterpret_cast<char*>(&infoHeaderData), sizeof(BITMAPINFOHEADER));
@@ -134,6 +154,7 @@ bool Texture2D::LoadBMP(const char* path)
         return false;
     }
 
+    // read in the image data
     inFile.seekg(fileHeaderData.bfOffBits, ios::beg);
     tempTextureData = new char[infoHeaderData.biSizeImage];
     inFile.read(tempTextureData, infoHeaderData.biSizeImage);
@@ -148,49 +169,66 @@ bool Texture2D::LoadBMP(const char* path)
         gluBuild2DMipmaps(GL_TEXTURE_2D, componentCount, infoHeaderData.biWidth, infoHeaderData.biHeight, GL_BGRA_EXT, GL_UNSIGNED_BYTE, tempTextureData);
 
     delete[] tempTextureData;
-
     return true;
 }
 
-void applyFilter(FilterType type, std::vector<char>& prevScanline, std::vector<char>& scanline, size_t bytesPerPixel) {
-    switch (type) {
+char PaethPredictor(char a, char b, char c) {
+    int p = a + b - c;
+    int pa = abs(p - a);
+    int pb = abs(p - b);
+    int pc = abs(p - c);
+
+    if (pa <= pb && pa <= pc) {
+        return a;
+    }
+    else if (pb <= pc) {
+        return b;
+    }
+    else {
+        return c;
+    }
+}
+
+void reverseFilter(FilterType filterType, const std::vector<char>& prevScanline, std::vector<char>& scanline, size_t bytesPerPixel) {
+    switch (filterType) {
     case FilterType::None:
-        // No filtering, do nothing
+        // No operation needed for None filter
         break;
     case FilterType::Sub:
-        // Sub filter: subtract each byte from the corresponding byte of the previous pixel
-        for (size_t i = bytesPerPixel; i < scanline.size(); ++i) {
-            scanline[i] -= scanline[i - bytesPerPixel];
+        // Apply Sub filter
+        for (size_t i = 0; i < scanline.size(); i++) {
+            char left = (i >= bytesPerPixel) ? scanline[i - bytesPerPixel] : 0;
+            scanline[i] = static_cast<char>((scanline[i] + left) & 0xff);
         }
         break;
     case FilterType::Up:
-        // Up filter: subtract each byte from the corresponding byte of the previous scanline
-        for (size_t i = 0; i < scanline.size(); ++i) {
-            scanline[i] -= prevScanline[i];
+        // Apply Up filter
+        for (size_t i = 0; i < scanline.size(); i++) {
+            char above = prevScanline[i];
+            scanline[i] = static_cast<char>((scanline[i] + above) & 0xff);
         }
         break;
     case FilterType::Average:
-        // Average filter: subtract each byte from the average of the corresponding bytes of the previous pixel and scanline
-        for (size_t i = 0; i < scanline.size(); ++i) {
-            char prevByte = (i < bytesPerPixel) ? 0 : scanline[i - bytesPerPixel];
-            char prevScanByte = prevScanline[i];
-            char aboveByte = (prevByte + prevScanByte) / 2;
-            scanline[i] -= aboveByte;
+        // Apply Average filter
+        for (size_t i = 0; i < scanline.size(); i++) {
+            char left = (i >= bytesPerPixel) ? scanline[i - bytesPerPixel] : 0;
+            char above = prevScanline[i];
+            char val = static_cast<char>(floor((left + above) / 2));
+            scanline[i] = static_cast<char>((scanline[i] + val) & 0xff);
         }
         break;
     case FilterType::Paeth:
-        // Paeth filter: predict byte based on previous pixel, previous scanline, and previous pixel of previous scanline
-        for (size_t i = 0; i < scanline.size(); ++i) {
-            char a = (i < bytesPerPixel) ? 0 : scanline[i - bytesPerPixel];
-            char b = prevScanline[i];
-            char c = (i < bytesPerPixel) ? 0 : prevScanline[i - bytesPerPixel];
-            char p = a + b - c;
-            char pa = std::abs(p - a);
-            char pb = std::abs(p - b);
-            char pc = std::abs(p - c);
-            char predicted = (pa <= pb && pa <= pc) ? a : (pb <= pc) ? b : c;
-            scanline[i] -= predicted;
+        // Apply Paeth filter
+        for (size_t i = 0; i < scanline.size(); i++) {
+            char left = (i >= bytesPerPixel) ? scanline[i - bytesPerPixel] : 0;
+            char above = prevScanline[i];
+            char upperLeft = (i >= bytesPerPixel) ? prevScanline[i - bytesPerPixel] : 0;
+            char paethPredictor = PaethPredictor(left, above, upperLeft);
+            scanline[i] = static_cast<char>((scanline[i] + paethPredictor) & 0xff);
         }
+        break;
+    default:
+        std::cerr << "Unknown filter type: " << static_cast<int>(filterType) << std::endl;
         break;
     }
 }
@@ -208,8 +246,8 @@ ChunkData* readNextChunk(std::ifstream& inFile) {
     // Read chunk length
     inFile.read(reinterpret_cast<char*>(&chunkData->length), sizeof(chunkData->length));
     if (inFile.eof()) { // Check if end of file is reached
-        delete chunkData; // Clean up allocated memory
-        return nullptr; // Return nullptr indicating end of file
+        delete chunkData;
+        return nullptr;
     }
     chunkData->length = swapEndian(chunkData->length);
 
@@ -229,124 +267,123 @@ ChunkData* readNextChunk(std::ifstream& inFile) {
     return chunkData;
 }
 
-// Apply filtering to each scanline of the image data
-void applyFilters(std::vector<char>& imageData, size_t width, size_t height, size_t bytesPerPixel) {
-    std::vector<char> prevScanline(width * bytesPerPixel, 0); // Previous scanline initialized to zeros
+// undo filtering to each scanline of the image data
+void undoFilters(std::vector<char>& imageData, size_t width, size_t height, size_t bytesPerPixel) {
+    std::vector<char> prevScanline(width * bytesPerPixel, 0); // previous scanline initialized to zeros
 
     for (size_t y = 0; y < height; ++y) {
-        size_t offset = y * width * bytesPerPixel;
-        FilterType filterType = static_cast<FilterType>(imageData[offset]); // Filter type is the first byte of each scanline
+        size_t offset = y * (width * bytesPerPixel + 1); // calculate offset considering the filter byte
+        FilterType filterType = static_cast<FilterType>(imageData[offset]); // filter type is the first byte of each scanline
         std::vector<char> scanline(imageData.begin() + offset + 1, imageData.begin() + offset + 1 + width * bytesPerPixel);
-        applyFilter(filterType, prevScanline, scanline, bytesPerPixel);
 
-        // Update previous scanline for next iteration
+        reverseFilter(filterType, prevScanline, scanline, bytesPerPixel);
+
+        // update previous scanline for next iteration
         prevScanline = scanline;
 
-        // Copy filtered scanline back to image data
+        // copy filtered scanline back to image data
         std::copy(scanline.begin(), scanline.end(), imageData.begin() + offset + 1);
     }
 }
 
-bool Texture2D::LoadPNG(const char* path)
-{
-    PNGFILEHEADER fileHeaderData;
-    PNGINFOHEADER infoHeaderData;
+bool Texture2D::LoadPNG(const char* path) {
+    PNGFILEHEADER fileHeaderData = {0};
+    PNGINFOHEADER infoHeaderData = {0};
     ChunkData* chunkData;
 
-    ifstream inFile;
-    inFile.open(path, ios::binary);
-    if (!inFile.good())
-    {
-        cerr << "Can't open texture file " << path << endl;
+    std::ifstream inFile;
+    inFile.open(path, std::ios::binary);
+    if (!inFile.good()) {
+        std::cerr << "Can't open texture file " << path << std::endl;
         return false;
     }
 
+    // make sure the file has the correct signature
     inFile.read(reinterpret_cast<char*>(&fileHeaderData), sizeof(PNGFILEHEADER));
     if (!(fileHeaderData.signature[1] == 'P' && fileHeaderData.signature[2] == 'N' && fileHeaderData.signature[3] == 'G')) {
-        cerr << "Not a valid PNG file: " << path << endl;
+        std::cerr << "Not a valid PNG file: " << path << std::endl;
         return false;
     }
 
-    std::vector<char> textureData = std::vector<char>();
+    std::vector<char> textureData;
+    bool foundHeaderChunk = false;
 
-    chunkData = readNextChunk(inFile);
-    cout << chunkData->length << " : " << chunkData->type << endl;
-    infoHeaderData = *reinterpret_cast<PNGINFOHEADER*>(chunkData->data.data());
-    infoHeaderData.width = swapEndian(infoHeaderData.width);
-    infoHeaderData.height = swapEndian(infoHeaderData.height);
-
-    while (chunkData != nullptr) {
-        cout << chunkData->length << " : " << chunkData->type << endl;
-        if (chunkData->type == "IDAT")
-        {
-
-            //textureData->insert(textureData->end(), &decompressed_data[0], &decompressed_data[decompressed_data_size]);
+    // loop through every chunk in the file and get data
+    while ((chunkData = readNextChunk(inFile)) != nullptr) {
+        if (chunkData->type == "IHDR") {
+            infoHeaderData = *reinterpret_cast<PNGINFOHEADER*>(chunkData->data.data());
+            infoHeaderData.width = swapEndian(infoHeaderData.width);
+            infoHeaderData.height = swapEndian(infoHeaderData.height);
+            foundHeaderChunk = true;
+        }
+        else if (chunkData->type == "IDAT") {
             textureData.insert(textureData.end(), chunkData->data.begin(), chunkData->data.end());
         }
+        delete chunkData;
+    }
 
-        chunkData = readNextChunk(inFile);
+    if (!foundHeaderChunk)
+    {
+        std::cerr << "Could not find IHDR chunk: " << path << std::endl;
+        return false;
     }
 
     inFile.close();
+    m_width = infoHeaderData.width;
+    m_height = infoHeaderData.height;
 
-    size_t bytesPerPixel = 1;
-    switch (infoHeaderData.colorType) {
-    case 0: // Grayscale
-        bytesPerPixel = (infoHeaderData.bitDepth == 16) ? 2 : 1;
-        break;
-    case 2: // RGB
-        bytesPerPixel = (infoHeaderData.bitDepth * 3 + 7) / 8;
-        break;
-    case 3: // Palette
-        bytesPerPixel = 1;
-        break;
-    case 4: // Grayscale with alpha
-        bytesPerPixel = (infoHeaderData.bitDepth * 2 + 7) / 8;
-        break;
-    case 6: // RGBA
-        bytesPerPixel = (infoHeaderData.bitDepth * 4 + 7) / 8;
-        break;
-    default:
-        // Handle unsupported color types
-        break;
+    size_t bytesPerPixel;
+    if (infoHeaderData.colorType == 6) { // Truecolor with alpha
+        bytesPerPixel = 4;
     }
-
-    Decompressor data_decompressor = Decompressor();
-    unsigned int compressed_data_size = textureData.size();
-    unsigned int max_decompressed_data_size = 300000000;
-    unsigned char* compressed_data = new unsigned char[compressed_data_size];
-    unsigned char* decompressed_data = new unsigned char[max_decompressed_data_size];
-
-    std::copy(textureData.begin(), textureData.end(), compressed_data);
-
-    unsigned int decompressed_data_size = data_decompressor.Feed(compressed_data, compressed_data_size, decompressed_data, max_decompressed_data_size, true);
-
-    if (decompressed_data_size == -1)
-    {
-        cout << "decompression error!" << endl;
-        delete[] compressed_data;
-        delete[] decompressed_data;
-
+    else if (infoHeaderData.colorType == 2) { // Truecolor without alpha
+        bytesPerPixel = 3;
+    }
+    else {
+        std::cerr << "Unsupported PNG color type: " << (int)infoHeaderData.colorType << std::endl;
         return false;
     }
 
-    cout << "decompressed " << decompressed_data_size << " bytes" << endl;
+    std::vector<char> decompressedData;
+    decompressedData.resize(infoHeaderData.width * infoHeaderData.height * bytesPerPixel + infoHeaderData.height);
 
-    std::vector<char>* uncompressedData = new std::vector<char>();
-    uncompressedData->insert(uncompressedData->end(), &decompressed_data[0], &decompressed_data[decompressed_data_size]);
+    // uncompress the data using zlib
+    z_stream stream;
+    memset(&stream, 0, sizeof(stream));
+    stream.next_in = reinterpret_cast<Bytef*>(textureData.data());
+    stream.avail_in = textureData.size();
+    stream.next_out = reinterpret_cast<Bytef*>(decompressedData.data());
+    stream.avail_out = decompressedData.size();
 
-    applyFilters(*uncompressedData, infoHeaderData.width, infoHeaderData.height, bytesPerPixel);
+    if (inflateInit(&stream) != Z_OK) {
+        std::cerr << "Error initializing zlib" << std::endl;
+        return false;
+    }
 
-    cout << infoHeaderData.width << " : " << infoHeaderData.height << endl;
-    cout << (int)infoHeaderData.bitDepth << " : " << (int)infoHeaderData.colorType << endl;
+    if (inflate(&stream, Z_FINISH) != Z_STREAM_END) {
+        std::cerr << "Error decompressing PNG" << std::endl;
+        inflateEnd(&stream);
+        return false;
+    }
+
+    inflateEnd(&stream);
+
+    // undo the filters applied to the data
+    undoFilters(decompressedData, infoHeaderData.width, infoHeaderData.height, bytesPerPixel);
+
+    // remove the filter type bytes at the start of every scanline
+    std::vector<char> imageData;
+    imageData.resize(infoHeaderData.width * infoHeaderData.height * bytesPerPixel);
+    for (size_t y = 0; y < infoHeaderData.height; ++y) {
+        size_t offset = y * (infoHeaderData.width * bytesPerPixel + 1);
+        std::copy(decompressedData.begin() + offset + 1, decompressedData.begin() + offset + 1 + infoHeaderData.width * bytesPerPixel, imageData.begin() + y * infoHeaderData.width * bytesPerPixel);
+    }
 
     glGenTextures(1, &m_ID);
     glBindTexture(GL_TEXTURE_2D, m_ID);
-    gluBuild2DMipmaps(GL_TEXTURE_2D, 4, infoHeaderData.width, infoHeaderData.height, GL_RGBA, GL_UNSIGNED_BYTE, uncompressedData->data());
 
-    delete[] compressed_data;
-    delete[] decompressed_data;
-    //delete[] uncompressedData;
+    GLenum format = (bytesPerPixel == 4) ? GL_RGBA : GL_RGB;
+    gluBuild2DMipmaps(GL_TEXTURE_2D, bytesPerPixel, infoHeaderData.width, infoHeaderData.height, format, GL_UNSIGNED_BYTE, imageData.data());
 
     return true;
 }
