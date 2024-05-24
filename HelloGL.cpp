@@ -1,21 +1,25 @@
 #include "HelloGL.h"
 #include <cmath>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include "Commons.h"
 #include "Camera.h"
 #include "InputManager.h"
 #include "MeshLoader.h"
 
 std::vector<const char*> HelloGL::sceneNames = {
-	"Test Scene",
+	"Animation Scene",
 	"House Scene",
-	"Church Scene"
+	"Church Scene",
+	"Forest Scene"
 };
 
 std::vector<const char*> HelloGL::scenePaths = {
-	"Scenes/scene1.xml",
-	"Scenes/scene2.xml",
-	"Scenes/scene3.xml",
+	"Scenes/animationScene.xml",
+	"Scenes/houseScene.xml",
+	"Scenes/churchScene.xml",
+	"Scenes/forestScene.xml",
 };
 
 glm::vec3 HelloGL::axisAlignedVectors[6] = {
@@ -75,7 +79,7 @@ void HelloGL::Display()
 
 		if (type & PRE_ORDER)
 		{
-			RenderText(node->name.c_str(), glm::ivec2(20 + depth * 30, currentY), node == selectedObject ? highlightedColor : textColor);
+			RenderText(node->name.c_str(), glm::ivec2(20 + depth * 30, currentY), {0.0f, 0.0f}, node == selectedObject ? highlightedColor : textColor);
 			currentY += 30;
 
 			if (node->object != nullptr)
@@ -95,15 +99,18 @@ void HelloGL::Display()
 	}, TraversalType(PRE_ORDER | IN_ORDER));
 
 	// display FPS
-	RenderText(("FPS: " + std::to_string(fps)).c_str(), { VIEWPORT_WIDTH - 80, 30 });
+	RenderText(("FPS: " + std::to_string(fps)).c_str(), { VIEWPORT_WIDTH - 20, 30 }, {1.0f, 0.0f});
 
 	// display the current camera mode
 	std::string cameraModeText = "Camera Mode: " + camera->GetViewModeAsString();
-	RenderText(cameraModeText.c_str(), {VIEWPORT_WIDTH / 2 - 80, 30});
+	RenderText(cameraModeText.c_str(), { VIEWPORT_WIDTH / 2, 30 }, {0.5f, 0.0f});
 
+	// display the current camera position
 	glm::vec3 cameraPos = camera->GetPosition();
-	std::string cameraPositionText = "( " + std::to_string(cameraPos.x) + ", " + std::to_string(cameraPos.y) + ", " + std::to_string(cameraPos.z) + " )";
-	RenderText(cameraPositionText.c_str(), { VIEWPORT_WIDTH / 2 - 80, 60 });
+	std::ostringstream stream;
+	stream << std::fixed << std::setprecision(1);
+	stream << "( " << cameraPos.x << ", " << cameraPos.y << ", " << cameraPos.z << " )";
+	RenderText(stream.str().c_str(), { VIEWPORT_WIDTH / 2, 60 }, {0.5f, 0.0f}, { 0.1f, 0.1f, 0.1f });
 
 	// update orbit target position if an object is selected.
 	if (selectedObject != nullptr)
@@ -283,11 +290,19 @@ void HelloGL::Raycast(int x, int y)
 	InitMenu();
 }
 
-void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, const Color& color)
+void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, const glm::vec2& anchorPoint, const Color& color)
 {
+	int textWidth = 0;
+	int textHeight = 18;
+
+	// calculate width of text
+	for (const char* p = text; *p; ++p) {
+		textWidth += glutBitmapWidth(GLUT_BITMAP_HELVETICA_18, *p);
+	}
+
 	// get world position from screen position
 	glm::vec3 cameraPosition = camera->GetPosition();
-	glm::vec3 rayDirection = GetRayFromScreenPosition(screenPosition.x, screenPosition.y);
+	glm::vec3 rayDirection = GetRayFromScreenPosition(screenPosition.x - (int)(textWidth * anchorPoint.x), screenPosition.y - (int)(textHeight * anchorPoint.y));
 	glm::vec3 worldPosition = cameraPosition + rayDirection;
 
 	glDisable(GL_LIGHTING);
@@ -300,6 +315,7 @@ void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, con
 	glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char*)text);
 
 	glPopMatrix();
+	glColor3f(1.0f, 1.0f, 1.0f);
 	glEnable(GL_LIGHTING);
 }
 
@@ -346,6 +362,9 @@ void HelloGL::TextureMenu(int item)
 		break;
 	case 4:
 		newTexture->LoadPNG("Textures/cat.png");
+		break;
+	case 5:
+		newTexture->LoadPNG("Textures/grass.png");
 		break;
 	}
 
@@ -463,7 +482,7 @@ void HelloGL::InitGL(int argc, char* argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(800, 800);
-	glutCreateWindow("Simple OpenGL Program");
+	glutCreateWindow("OpenGL Program");
 
 	glutDisplayFunc(GLUTCallbacks::Display);
 	glutTimerFunc(REFRESHRATE, GLUTCallbacks::Timer, REFRESHRATE);
@@ -522,6 +541,7 @@ void HelloGL::InitMenu()
 		glutAddMenuEntry("Stars", 2);
 		glutAddMenuEntry("Sand", 3);
 		glutAddMenuEntry("Cat", 4);
+		glutAddMenuEntry("Grass", 5);
 
 		glutSetMenu(baseMenu);
 		glutAddSubMenu("Set Object Texture", textureMenu);

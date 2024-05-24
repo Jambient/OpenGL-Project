@@ -44,8 +44,6 @@ bool Texture2D::LoadRAW(const char* path)
     inFile.read(tempTextureData, fileSize);
     inFile.close();
 
-    std::cout << path << " loaded." << std::endl;
-
     // calculate the total amount of pixels in the image.
     const int bytesPerPixel = 3 * sizeof(unsigned char);
     const int totalPixels = fileSize / bytesPerPixel;
@@ -108,8 +106,6 @@ bool Texture2D::LoadTGA(const char* path)
     //We only support RGB type
     if (type == 2)
     {
-        cout << path << " loaded." << endl;
-
         glGenTextures(1, &m_ID); //Get next Texture ID
         glBindTexture(GL_TEXTURE_2D, m_ID); //Bind the texture to the ID
 
@@ -371,12 +367,13 @@ bool Texture2D::LoadPNG(const char* path) {
     // undo the filters applied to the data
     undoFilters(decompressedData, infoHeaderData.width, infoHeaderData.height, bytesPerPixel);
 
-    // remove the filter type bytes at the start of every scanline
+    // remove the filter type bytes at the start of every scanline and inverse the image
     std::vector<char> imageData;
     imageData.resize(infoHeaderData.width * infoHeaderData.height * bytesPerPixel);
-    for (size_t y = 0; y < infoHeaderData.height; ++y) {
+    for (size_t y = 0; y < infoHeaderData.height; y++) {
         size_t offset = y * (infoHeaderData.width * bytesPerPixel + 1);
-        std::copy(decompressedData.begin() + offset + 1, decompressedData.begin() + offset + 1 + infoHeaderData.width * bytesPerPixel, imageData.begin() + y * infoHeaderData.width * bytesPerPixel);
+        size_t destOffset = (infoHeaderData.height - y - 1) * infoHeaderData.width * bytesPerPixel;
+        std::copy(decompressedData.begin() + offset + 1, decompressedData.begin() + offset + 1 + infoHeaderData.width * bytesPerPixel, imageData.begin() + destOffset);
     }
 
     glGenTextures(1, &m_ID);

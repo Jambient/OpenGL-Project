@@ -135,7 +135,7 @@ public:
 	 * @param screenPosition The screen position to render at.
 	 * @param color The color of the text.
 	 */
-	void RenderText(const char* text, const glm::ivec2& screenPosition, const Color& color = {1.0f, 1.0f, 1.0f});
+	void RenderText(const char* text, const glm::ivec2& screenPosition, const glm::vec2& anchorPoint = {0.0f, 0.0f}, const Color & color = { 1.0f, 1.0f, 1.0f });
 
 	/**
 	 * @brief Gets the closest axis aligned vector to the specified vector via dot product.

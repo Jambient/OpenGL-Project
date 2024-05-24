@@ -75,15 +75,6 @@
 					</animation>
 				</properties>
 			</obj>
-			<cube name="Test">
-				<properties>
-					<transform>
-						<position x="0" y="30" z="0" />
-						<scale x="2" y="2" z="2" />
-					</transform>
-					<texture path="Textures/doggy.png" />
-				</properties>
-			</cube>
 		</cube>
 	</objects>
 </scene>

@@ -1,0 +1,122 @@
+<scene>
+<camera>
+		<position x="20" y="8" z="-1" />
+		<rotation x="0" y="270" z="0" />
+	</camera>
+	<objects>
+		<cube name="Baseplate">
+			<properties>
+				<transform>
+					<position x="0" y="0" z="0" />
+					<scale x="30" y="1" z="30" />
+				</transform>
+				<texture path="Textures/grass.png" />
+			</properties>
+			<obj name="Statue" path="Models/statue.obj">
+				<properties>
+					<transform>
+						<position x="0" y="1" z="0" />
+						<scale x="3" y="3" z="3" />
+					</transform>
+					<texture path="Textures/statue-texture.png" />
+				</properties>
+			</obj>
+			<obj name="Tree" path="Models/forest-tree.obj">
+				<properties>
+					<transform>
+						<position x="27" y="1" z="-11" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Tree" path="Models/forest-tree.obj">
+				<properties>
+					<transform>
+						<position x="20" y="1" z="15" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Tree" path="Models/forest-tree.obj">
+				<properties>
+					<transform>
+						<position x="-10" y="1" z="16" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Tree" path="Models/forest-tree.obj">
+				<properties>
+					<transform>
+						<position x="-27" y="1" z="23" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Tree" path="Models/forest-tree.obj">
+				<properties>
+					<transform>
+						<position x="-24" y="1" z="-18" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Tree" path="Models/forest-tree.obj">
+				<properties>
+					<transform>
+						<position x="9" y="1" z="-11" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Tree" path="Models/forest-tree.obj">
+				<properties>
+					<transform>
+						<position x="-17" y="1" z="-1" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Tree" path="Models/forest-tree.obj">
+				<properties>
+					<transform>
+						<position x="5" y="1" z="13" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Tree" path="Models/forest-tree.obj">
+				<properties>
+					<transform>
+						<position x="-5" y="1" z="-15" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Rock" path="Models/small-rock.obj">
+				<properties>
+					<transform>
+						<position x="12" y="1" z="0" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Bush" path="Models/small-bush.obj">
+				<properties>
+					<transform>
+						<position x="15" y="1" z="-23" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+			<obj name="Bush" path="Models/small-bush.obj">
+				<properties>
+					<transform>
+						<position x="-8" y="1" z="4" />
+					</transform>
+					<texture path="Textures/nature-palette.png" />
+				</properties>
+			</obj>
+		</cube>
+	</objects>
+</scene>
