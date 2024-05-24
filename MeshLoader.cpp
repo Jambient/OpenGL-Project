@@ -12,6 +12,7 @@ using namespace std;
 
 namespace MeshLoader
 {
+	// namespace for local variables and methods
 	namespace
 	{
 		// variables
@@ -49,16 +50,6 @@ namespace MeshLoader
 			}
 
 			return v;
-		}
-
-		string getFileExtension(const char* path)
-		{
-			string strPath(path);
-			size_t lastDotPos = strPath.find_last_of('.');
-			if (lastDotPos != string::npos) {
-				return strPath.substr(lastDotPos + 1);
-			}
-			return "";
 		}
 
 		// loading functions
@@ -346,7 +337,7 @@ namespace MeshLoader
 		}
 
 		// load mesh
-		std::string extension = getFileExtension(path);
+		std::string extension = GetFileExtension(path);
 		Mesh* mesh = nullptr;
 		if (extension == "txt")
 			mesh = loadTXT(path);

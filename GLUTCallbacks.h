@@ -1,4 +1,7 @@
 #pragma once
+#ifndef _GLUTCALLBACKS_H
+#define _GLUTCALLBACKS_H
+
 class HelloGL;
 
 namespace GLUTCallbacks
@@ -15,4 +18,6 @@ namespace GLUTCallbacks
 	void Motion(int x, int y);
 	void BaseMenu(int item);
 	void SceneMenu(int item);
+	void TextureMenu(int item);
 }
+#endif //_GLUTCALLBACKS_H

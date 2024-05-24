@@ -24,14 +24,9 @@
     <ClInclude Include="Cube.h" />
     <ClInclude Include="GLUTCallbacks.h" />
     <ClInclude Include="HelloGL.h" />
-    <ClInclude Include="inflatecpp\adler32.h" />
-    <ClInclude Include="inflatecpp\bit_reader.h" />
-    <ClInclude Include="inflatecpp\crc32.h" />
-    <ClInclude Include="inflatecpp\decompressor.h" />
-    <ClInclude Include="inflatecpp\huffman_decoder.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="MeshLoader.h" />
-    <ClInclude Include="MovingCube.h" />
+    <ClInclude Include="MovingObject.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneObject.h" />
     <ClInclude Include="Commons.h" />
@@ -44,14 +39,9 @@
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="GLUTCallbacks.cpp" />
     <ClCompile Include="HelloGL.cpp" />
-    <ClCompile Include="inflatecpp\adler32.cc" />
-    <ClCompile Include="inflatecpp\bit_reader.cc" />
-    <ClCompile Include="inflatecpp\crc32.cc" />
-    <ClCompile Include="inflatecpp\decompressor.cc" />
-    <ClCompile Include="inflatecpp\huffman_decoder.cc" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="MeshLoader.cpp" />
-    <ClCompile Include="MovingCube.cpp" />
+    <ClCompile Include="MovingObject.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneObject.cpp" />
     <ClCompile Include="Texture2D.cpp" />
@@ -173,6 +163,8 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\glm.1.0.1\build\native\glm.targets" Condition="Exists('packages\glm.1.0.1\build\native\glm.targets')" />
     <Import Project="packages\pugixml.1.14.0\build\native\pugixml.targets" Condition="Exists('packages\pugixml.1.14.0\build\native\pugixml.targets')" />
+    <Import Project="packages\zlib_native.redist.1.2.11\build\native\zlib_native.redist.targets" Condition="Exists('packages\zlib_native.redist.1.2.11\build\native\zlib_native.redist.targets')" />
+    <Import Project="packages\zlib_native.1.2.11\build\native\zlib_native.targets" Condition="Exists('packages\zlib_native.1.2.11\build\native\zlib_native.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -180,5 +172,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('packages\glm.1.0.1\build\native\glm.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glm.1.0.1\build\native\glm.targets'))" />
     <Error Condition="!Exists('packages\pugixml.1.14.0\build\native\pugixml.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\pugixml.1.14.0\build\native\pugixml.targets'))" />
+    <Error Condition="!Exists('packages\zlib_native.redist.1.2.11\build\native\zlib_native.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib_native.redist.1.2.11\build\native\zlib_native.redist.targets'))" />
+    <Error Condition="!Exists('packages\zlib_native.1.2.11\build\native\zlib_native.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib_native.1.2.11\build\native\zlib_native.targets'))" />
   </Target>
 </Project>

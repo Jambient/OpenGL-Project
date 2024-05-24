@@ -67,4 +67,8 @@ namespace GLUTCallbacks
 	{
 		helloGL->SceneMenu(item);
 	}
+	void TextureMenu(int item)
+	{
+		helloGL->TextureMenu(item);
+	}
 }

@@ -2,11 +2,30 @@
 #include <cmath>
 #include <iostream>
 #include "Commons.h"
-#include "Cube.h"
-#include "MovingCube.h"
 #include "Camera.h"
 #include "InputManager.h"
 #include "MeshLoader.h"
+
+std::vector<const char*> HelloGL::sceneNames = {
+	"Test Scene",
+	"House Scene",
+	"Church Scene"
+};
+
+std::vector<const char*> HelloGL::scenePaths = {
+	"Scenes/scene1.xml",
+	"Scenes/scene2.xml",
+	"Scenes/scene3.xml",
+};
+
+glm::vec3 HelloGL::axisAlignedVectors[6] = {
+	{0, 1, 0},
+	{0, -1, 0},
+	{1, 0, 0},
+	{-1, 0, 0},
+	{0, 0, 1},
+	{0, 0, -1}
+};
 
 HelloGL* g_game;
 void CloseCallback() {
@@ -40,9 +59,6 @@ void HelloGL::Display()
 	glDisable(GL_LIGHTING); glDisable(GL_DEPTH_TEST); glDisable(GL_CULL_FACE);
 	skybox->Draw();
 	glEnable(GL_LIGHTING); glEnable(GL_DEPTH_TEST); glEnable(GL_CULL_FACE);
-
-	if (testObject != nullptr)
-		testObject->Draw();
 
 	// render every object in the scene
 	int currentY = 30;
@@ -82,9 +98,12 @@ void HelloGL::Display()
 	RenderText(("FPS: " + std::to_string(fps)).c_str(), { VIEWPORT_WIDTH - 80, 30 });
 
 	// display the current camera mode
-	std::string cameraModeText = "Camera Mode: ";
-	cameraModeText += camera->GetViewModeAsString();
+	std::string cameraModeText = "Camera Mode: " + camera->GetViewModeAsString();
 	RenderText(cameraModeText.c_str(), {VIEWPORT_WIDTH / 2 - 80, 30});
+
+	glm::vec3 cameraPos = camera->GetPosition();
+	std::string cameraPositionText = "( " + std::to_string(cameraPos.x) + ", " + std::to_string(cameraPos.y) + ", " + std::to_string(cameraPos.z) + " )";
+	RenderText(cameraPositionText.c_str(), { VIEWPORT_WIDTH / 2 - 80, 60 });
 
 	// update orbit target position if an object is selected.
 	if (selectedObject != nullptr)
@@ -130,7 +149,6 @@ void HelloGL::Update()
 	glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(lightData.ambient));
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(lightData.diffuse));
 	glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(lightData.specular));
-	glLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(lightPosition));
 
 	// update all animations
 	currentScene->IterateTree(currentScene->GetRoot(), 0, [&](TreeNode* node, int depth, TraversalType type) {
@@ -177,6 +195,8 @@ void HelloGL::Update()
 	camera->Update(viewMatrix);
 	skybox->SetPosition(camera->GetPosition());
 	previousElapsedTime = currentTime;
+
+	glLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(lightPosition));
 	glutPostRedisplay();
 }
 
@@ -200,10 +220,10 @@ glm::vec3 HelloGL::GetRayFromScreenPosition(int x, int y)
 	return rayDirection;
 }
 
-void HelloGL::Raycast(int mouseX, int mouseY)
+void HelloGL::Raycast(int x, int y)
 {
 	// build ray from direction and origin
-	glm::vec3 rayDirection = GetRayFromScreenPosition(mouseX, mouseY);
+	glm::vec3 rayDirection = GetRayFromScreenPosition(x, y);
 	glm::vec3 rayOrigin = camera->GetPosition();
 	Ray ray = Ray(rayOrigin, rayDirection);
 
@@ -226,7 +246,7 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 
 			// check if ray intersects with bounding box
 			float intersectionDistance;
-			if (bbox.intersect(ray, intersectionDistance))
+			if (bbox.Intersect(ray, intersectionDistance))
 			{
 				if (intersectionDistance < closestIntersection)
 				{
@@ -260,6 +280,7 @@ void HelloGL::Raycast(int mouseX, int mouseY)
 	}
 
 	selectedObject = closestObject;
+	InitMenu();
 }
 
 void HelloGL::RenderText(const char* text, const glm::ivec2& screenPosition, const Color& color)
@@ -298,6 +319,37 @@ void HelloGL::SceneMenu(int item)
 	camera->SetViewMode(ViewMode::FLY);
 	camera->SetPosition(currentScene->GetCameraPosition());
 	camera->SetRotation(currentScene->GetCameraRotation());
+}
+
+void HelloGL::TextureMenu(int item)
+{
+	if (originalObjectTexture.find(selectedObject) == originalObjectTexture.end())
+	{
+		originalObjectTexture[selectedObject] = selectedObject->object->GetTexture();
+	}
+	Texture2D* newTexture = new Texture2D();
+
+	switch (item)
+	{
+	case 0:
+		delete newTexture;
+		newTexture = originalObjectTexture[selectedObject];
+		break;
+	case 1:
+		newTexture->LoadRAW("Textures/penguins.raw");
+		break;
+	case 2:
+		newTexture->LoadRAW("Textures/stars.raw");
+		break;
+	case 3:
+		newTexture->LoadBMP("Textures/sand.bmp");
+		break;
+	case 4:
+		newTexture->LoadPNG("Textures/cat.png");
+		break;
+	}
+
+	selectedObject->object->SetTexture(newTexture);
 }
 
 void HelloGL::KeyboardDown(unsigned char key, int x, int y)
@@ -394,18 +446,13 @@ void HelloGL::InitObjects()
 	Texture2D* skyboxTexture = new Texture2D();
 	skyboxTexture->LoadBMP("Textures/blue-sky.bmp");
 	skybox = new SceneObject(skyboxMesh, skyboxTexture, camera->GetPosition());
-
-	/*Mesh* cubeMesh = MeshLoader::Load("Models/cube.txt");
-	Texture2D* pngTexture = new Texture2D();
-	pngTexture->LoadPNG("Textures/new-cat.png");
-	testObject = new SceneObject(cubeMesh, pngTexture, glm::vec3(0, 10, 0));*/
 }
 
 void HelloGL::InitLighting()
 {
-	lightPosition = glm::vec4(5.0f, 1.0f, 5.0f, 0.0f);
+	lightPosition = glm::vec4(30.0f, 50.0f, 30.0f, 0.0f);
 
-	lightData.ambient = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+	lightData.ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	lightData.diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	lightData.specular = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -428,19 +475,7 @@ void HelloGL::InitGL(int argc, char* argv[])
 	glutMotionFunc(GLUTCallbacks::Motion);
 	glutCloseFunc(CloseCallback);
 
-	// create scene menu
-	int sceneMenu = glutCreateMenu(GLUTCallbacks::SceneMenu);
-	for (unsigned int i = 0; i < sceneNames.size(); i++)
-	{
-		glutAddMenuEntry(sceneNames[i], i);
-	}
-
-	// create base menu
-	glutCreateMenu(GLUTCallbacks::BaseMenu);
-	glutAddSubMenu("Change Scene", sceneMenu);
-
-	// Associate a mouse button with menu
-	glutAttachMenu(GLUT_MIDDLE_BUTTON);
+	InitMenu();
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -460,6 +495,40 @@ void HelloGL::InitGL(int argc, char* argv[])
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+}
+
+void HelloGL::InitMenu()
+{
+	glutDestroyMenu(glutGetMenu());
+
+	// create base menu
+	int baseMenu = glutCreateMenu(GLUTCallbacks::BaseMenu);
+
+	// create scene menu
+	int sceneMenu = glutCreateMenu(GLUTCallbacks::SceneMenu);
+	for (unsigned int i = 0; i < sceneNames.size(); i++)
+	{
+		glutAddMenuEntry(sceneNames[i], i);
+	}
+	glutSetMenu(baseMenu);
+	glutAddSubMenu("Change Scene", sceneMenu);
+
+	// create texture menu
+	if (selectedObject != nullptr)
+	{
+		int textureMenu = glutCreateMenu(GLUTCallbacks::TextureMenu);
+		glutAddMenuEntry("Default", 0);
+		glutAddMenuEntry("Penguins", 1);
+		glutAddMenuEntry("Stars", 2);
+		glutAddMenuEntry("Sand", 3);
+		glutAddMenuEntry("Cat", 4);
+
+		glutSetMenu(baseMenu);
+		glutAddSubMenu("Set Object Texture", textureMenu);
+	}
+
+	// Associate a mouse button with menu
+	glutAttachMenu(GLUT_MIDDLE_BUTTON);
 }
 
 int main(int argc, char* argv[]) 

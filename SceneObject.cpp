@@ -2,6 +2,8 @@
 #include "Commons.h"
 #include <glm/glm.hpp>
 
+Material* SceneObject::s_defaultMaterial = nullptr;
+
 glm::vec3 vertexToVector(Vertex vertex)
 {
 	return glm::vec3(vertex.x, vertex.y, vertex.z);
@@ -30,14 +32,14 @@ SceneObject::SceneObject(Mesh* mesh, Texture2D* texture, glm::vec3 position)
 	m_rotation = glm::vec3();
 	m_scale = glm::vec3(1, 1, 1);
 
-	m_material = new Material();
-	m_material->ambient.x = 1.0f; m_material->ambient.y = 1.0f; m_material->ambient.z = 1.0f;
-	m_material->ambient.w = 1.0f;
-	m_material->diffuse.x = 1.0f; m_material->diffuse.y = 1.0f; m_material->diffuse.z = 1.0f;
-	m_material->diffuse.w = 1.0f;
-	m_material->specular.x = 0.0f; m_material->specular.y = 0.0f; m_material->specular.z = 0.0f;
-	m_material->specular.w = 1.0f;
-	m_material->shininess = 250.0f;
+	if (s_defaultMaterial == nullptr)
+	{
+		s_defaultMaterial = new Material();
+		s_defaultMaterial->ambient = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		s_defaultMaterial->diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		s_defaultMaterial->specular = glm::vec4(0.70f, 0.70f, 0.70f, 1.0f);
+		s_defaultMaterial->shininess = 32.0f;
+	}
 
 	UpdateBoundingBox();
 }
@@ -46,7 +48,6 @@ SceneObject::~SceneObject()
 {
 	delete m_mesh;
 	delete m_texture;
-	delete m_material;
 }
 void SceneObject::Update(){}
 
@@ -59,19 +60,22 @@ void SceneObject::Draw(bool drawBoundingBox, glm::vec3 positionOffset)
 {
 	if (m_mesh->vertices.size() > 0 && m_mesh->indices.size() > 0)
 	{
-		bool hasTexCoords = m_mesh->texCoords.size() > 0;
+		bool isTextured = m_mesh->texCoords.size() > 0 && m_texture != nullptr;
+		bool hasNormals = m_mesh->normals.size() > 0;
 
-		if (hasTexCoords)
+		if (isTextured)
 			glBindTexture(GL_TEXTURE_2D, m_texture->GetID());
 
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_NORMAL_ARRAY);
-		if (hasTexCoords)
+		if (hasNormals)
+			glEnableClientState(GL_NORMAL_ARRAY);
+		if (isTextured)
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 		glVertexPointer(3, GL_FLOAT, 0, m_mesh->vertices.data());
-		glNormalPointer(GL_FLOAT, 0, m_mesh->normals.data());
-		if (hasTexCoords)
+		if (hasNormals)
+			glNormalPointer(GL_FLOAT, 0, m_mesh->normals.data());
+		if (isTextured)
 			glTexCoordPointer(2, GL_FLOAT, 0, m_mesh->texCoords.data());
 
 		glPushMatrix();
@@ -86,9 +90,8 @@ void SceneObject::Draw(bool drawBoundingBox, glm::vec3 positionOffset)
 			for (const auto& pair : m_mesh->materialUsage)
 			{
 				Material currentMat = m_mesh->materials[pair.second];
-				// NEED TO UNDERSTAND STAND WHY SWAPPING THESE AROUND WORKED
-				glMaterialfv(GL_FRONT, GL_AMBIENT, &(currentMat.diffuse.x));
-				glMaterialfv(GL_FRONT, GL_DIFFUSE, &(currentMat.ambient.x));
+				glMaterialfv(GL_FRONT, GL_AMBIENT, &(currentMat.ambient.x));
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, &(currentMat.diffuse.x));
 				glMaterialfv(GL_FRONT, GL_SPECULAR, &(currentMat.specular.x));
 				glMaterialf(GL_FRONT, GL_SHININESS, currentMat.shininess);
 
@@ -97,10 +100,10 @@ void SceneObject::Draw(bool drawBoundingBox, glm::vec3 positionOffset)
 		}
 		else
 		{
-			glMaterialfv(GL_FRONT, GL_AMBIENT, &(m_material->ambient.x));
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, &(m_material->diffuse.x));
-			glMaterialfv(GL_FRONT, GL_SPECULAR, &(m_material->specular.x));
-			glMaterialf(GL_FRONT, GL_SHININESS, m_material->shininess);
+			glMaterialfv(GL_FRONT, GL_AMBIENT, &(s_defaultMaterial->ambient.x));
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, &(s_defaultMaterial->diffuse.x));
+			glMaterialfv(GL_FRONT, GL_SPECULAR, &(s_defaultMaterial->specular.x));
+			glMaterialf(GL_FRONT, GL_SHININESS, s_defaultMaterial->shininess);
 
 			glDrawElements(GL_TRIANGLES, m_mesh->indices.size(), GL_UNSIGNED_SHORT, m_mesh->indices.data());
 		}

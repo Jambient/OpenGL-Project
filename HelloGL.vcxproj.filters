@@ -42,22 +42,7 @@
     <ClInclude Include="Texture2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MovingCube.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inflatecpp\adler32.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inflatecpp\bit_reader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inflatecpp\crc32.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inflatecpp\decompressor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inflatecpp\huffman_decoder.h">
+    <ClInclude Include="MovingObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene.h">
@@ -92,22 +77,7 @@
     <ClCompile Include="Texture2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MovingCube.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="inflatecpp\adler32.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="inflatecpp\bit_reader.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="inflatecpp\crc32.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="inflatecpp\decompressor.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="inflatecpp\huffman_decoder.cc">
+    <ClCompile Include="MovingObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scene.cpp">

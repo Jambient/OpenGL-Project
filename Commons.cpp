@@ -7,7 +7,7 @@ Ray::Ray(const glm::vec3& _orig, const glm::vec3& _dir)
     invdir = glm::vec3(1 / dir.x, 1 / dir.y, 1 / dir.z);
 }
 
-bool AABBox::intersect(const Ray& r, float& t)
+bool AABBox::Intersect(const Ray& r, float& t)
 {
     float tmin, tmax;
 
@@ -30,4 +30,14 @@ glm::vec3 RotateVector(const glm::vec3& vector, const glm::vec3& rotation)
     glm::quat quatRotation = glm::quat(glm::radians(rotation));
     glm::vec3 rotatedVector = glm::rotate(quatRotation, vector);
     return rotatedVector;
+}
+
+std::string GetFileExtension(const char* path)
+{
+    std::string strPath(path);
+    size_t lastDotPos = strPath.find_last_of('.');
+    if (lastDotPos != std::string::npos) {
+        return strPath.substr(lastDotPos + 1);
+    }
+    return "";
 }

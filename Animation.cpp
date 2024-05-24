@@ -85,7 +85,7 @@ namespace EasingFunctions
     }
 }
 
-std::unordered_map<std::string, EasingStyle> Animation::stringToEasingStyle = {
+std::unordered_map<std::string, EasingStyle> Animation::s_stringToEasingStyle = {
     {"Linear", EasingStyle::Linear},
     {"Sine", EasingStyle::Sine},
     {"Quad", EasingStyle::Quad},
@@ -99,13 +99,13 @@ std::unordered_map<std::string, EasingStyle> Animation::stringToEasingStyle = {
     {"Bounce", EasingStyle::Bounce}
 };
 
-std::unordered_map<std::string, EasingDirection> Animation::stringToEasingDirection = {
+std::unordered_map<std::string, EasingDirection> Animation::s_stringToEasingDirection = {
     {"In", EasingDirection::In},
     {"Out", EasingDirection::Out},
     {"InOut", EasingDirection::InOut}
 };
 
-std::unordered_map<EasingStyle, EasingFunction> Animation::styleToFunction = {
+std::unordered_map<EasingStyle, EasingFunction> Animation::s_styleToFunction = {
     {EasingStyle::Linear, EasingFunctions::Linear},
     {EasingStyle::Sine, EasingFunctions::Sine},
     {EasingStyle::Quad, EasingFunctions::Quad},
@@ -162,18 +162,18 @@ void Animation::Update(float deltaTime)
 
     if(m_easingDirection == EasingDirection::In)
     {
-        t = styleToFunction[m_easingStyle](t);
+        t = s_styleToFunction[m_easingStyle](t);
     }
     else if (m_easingDirection == EasingDirection::Out)
     {
-        t = 1.0 - styleToFunction[m_easingStyle](1.0f - t);
+        t = 1.0 - s_styleToFunction[m_easingStyle](1.0f - t);
     }
     else if (m_easingDirection == EasingDirection::InOut)
     {
         if (t <= 0.5)
-            t = styleToFunction[m_easingStyle](t * 2) * 0.5;
+            t = s_styleToFunction[m_easingStyle](t * 2) * 0.5;
         else
-            t = ( (1.0 - styleToFunction[m_easingStyle](1.0 - (t - 0.5) * 2)) * 0.5) + 0.5;
+            t = ( (1.0 - s_styleToFunction[m_easingStyle](1.0 - (t - 0.5) * 2)) * 0.5) + 0.5;
     }
 
     // set new values for object

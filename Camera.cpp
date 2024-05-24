@@ -2,7 +2,7 @@
 #include "Commons.h"
 #include <iostream>
 
-std::map<ViewMode, std::string> Camera::m_viewModeToString = {
+std::map<ViewMode, std::string> Camera::s_viewModeToString = {
 	{ViewMode::FLY, "FLY"},
 	{ViewMode::LOCK, "LOCK"},
 	{ViewMode::ORBIT, "ORBIT"}
